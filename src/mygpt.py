@@ -1,13 +1,10 @@
-# curl https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt > tinyshakespeare.txt
 
 from basic_tokenizer import make_encoder, make_decoder
 
-with open("src/tinyshakespeare.txt", "r", encoding="utf-8") as f:
+with open("sample_data/tinyshakespeare.txt", "r", encoding="utf-8") as f:
     text = f.read()
 
 print("corpus length:", len(text))
-
-# print(text[:1000])
 
 alphabet = sorted(list(set(text)))
 alphabet_size = len(alphabet)
