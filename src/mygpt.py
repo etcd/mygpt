@@ -20,3 +20,7 @@ data = torch.tensor(encode(text), dtype=torch.long)
 
 print(data.shape, data.dtype)
 print(data[:1000])
+
+n = int(len(data) * 0.9)
+train_data = data[:n]
+validate_data = data[n:]
