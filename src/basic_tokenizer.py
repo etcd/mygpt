@@ -2,6 +2,11 @@
 # SentencePiece by Google
 # TikToken by OpenAI
 
+def make_serializers(text):
+    alphabet = sorted(list(set(text)))
+    return make_encoder(alphabet), make_decoder(alphabet)
+
+
 def make_encoder(alphabet):
     def encode(str):
         stoi = {ch: i for i, ch in enumerate(alphabet)}

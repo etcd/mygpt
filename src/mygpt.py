@@ -1,5 +1,5 @@
 
-from basic_tokenizer import make_encoder, make_decoder
+from basic_tokenizer import make_encoder, make_decoder, make_serializers
 import torch
 
 
@@ -19,11 +19,9 @@ def get_batch(data, block_size, batch_size):
 
 with open("sample_data/tinyshakespeare.txt", "r", encoding="utf-8") as f:
     text = f.read()
-alphabet = sorted(list(set(text)))
-encode = make_encoder(alphabet)
-decode = make_decoder(alphabet)
-data = torch.tensor(encode(text), dtype=torch.long)
+encode, decode = make_serializers(text)
 
+data = torch.tensor(encode(text), dtype=torch.long)
 [train_data, validate_data] = split_list(data, 0.9)
 
 block_size = 8
