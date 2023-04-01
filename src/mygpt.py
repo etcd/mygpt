@@ -1,5 +1,5 @@
 
-from basic_tokenizer import make_encoder, make_decoder, make_serializers
+from basic_tokenizer import make_encoder, make_decoder
 import torch
 
 
@@ -19,7 +19,9 @@ def get_batch(data, block_size, batch_size):
 
 with open("sample_data/tinyshakespeare.txt", "r", encoding="utf-8") as f:
     text = f.read()
-encode, decode = make_serializers(text)
+alphabet = sorted(list(set(text)))
+encode = make_encoder(alphabet)
+decode = make_decoder(alphabet)
 
 data = torch.tensor(encode(text), dtype=torch.long)
 [train_data, validate_data] = split_list(data, 0.9)
@@ -28,10 +30,17 @@ block_size = 8
 batch_size = 4
 
 blocks, targetss = get_batch(train_data, block_size, batch_size)
-print('blocks', blocks)
-print('targetss', targetss)
 
-for i in range(batch_size):
-    block = blocks[i]
-    targets = targetss[i]
-    print("in", block, "out", targets)
+token_embedding_table = torch.nn.Embedding(
+    len(alphabet), len(alphabet))  # batch, time, channels (vocab size)
+
+
+def forward(token_embedding_table, blocks, targetss):
+    logits = token_embedding_table(blocks)
+    loss = torch.nn.functional.cross_entropy(
+        logits.view(-1, len(alphabet)), targetss.view(-1))
+    return logits, loss
+
+
+logits, loss = forward(token_embedding_table, blocks, targetss)
+print(logits, loss)
