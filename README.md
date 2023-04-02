@@ -6,12 +6,16 @@ Please install the following:
 pip install mypy data-science-types
 ```
 
-## Static typing
-
-Run with `mypy`:
+## Typecheck
 
 ```
-mypy src/mymm.py
+mypy src
+```
+
+## Run
+
+```
+python src/mymm.py
 ```
 
 ## Sample data
