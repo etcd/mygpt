@@ -1,4 +1,5 @@
 from lib.basic_tokenizer import make_tokenizers
+from lib.bigrams.generate_word import generate_word
 from lib.bigrams.get_log_likelihood import get_log_likelihood
 from lib.bigrams.count import count_bigrams
 from lib.math.get_perplexity import get_perplexity
@@ -15,8 +16,8 @@ bigrams = count_bigrams(encoded_words, alphabet_size)
 bigrams_plus_one = bigrams + 1  # model smoothing with +1
 probabilities = bigrams_plus_one/bigrams_plus_one.sum(1, keepdim=True)
 
-# for _ in range(5):
-#     print(generate_word(probabilities, decode))
+for _ in range(5):
+    print(generate_word(probabilities, decode))
 
 log_likelihood = 0.0
 num_bigrams = 0
@@ -26,5 +27,6 @@ for word in words:
     log_likelihood += word_ll
     num_bigrams += len(word)+1
 
+print('--')
 print(f"Average NLL: {-log_likelihood/num_bigrams:.4f}")
 print(f"Perplexity: {get_perplexity(log_likelihood, num_bigrams):.4f}")
