@@ -29,7 +29,7 @@ for word in words:
 # plt.axis('off')
 # plt.show()
 
-bigrams_plus_one = bigrams + 1
+bigrams_plus_one = bigrams + 1  # model smoothing with +1
 probabilities = bigrams_plus_one/bigrams_plus_one.sum(1, keepdim=True)
 
 # generate a name
