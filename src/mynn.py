@@ -9,7 +9,7 @@ alphabet = sorted(list(set(''.join(words))))
 (encode, decode) = make_tokenizers(alphabet, ['.'])
 
 xs, ys = [], []
-for word in words[:1]:
+for word in words:
     encoded_word = encode('.' + word + '.')
     encoded_bigrams = get_bigrams(encoded_word)
     for c1, c2 in encoded_bigrams:
@@ -22,5 +22,8 @@ ys_tensor = torch.tensor(ys)
 xenc = torch.nn.functional.one_hot(xs_tensor, num_classes=27).float()
 
 W = torch.randn(27, 27)
-probs = get_softmax(xenc @ W)
-print(probs)
+
+# forward pass
+next_letter_probabilities = get_softmax(xenc @ W)
+print(next_letter_probabilities)
+print(next_letter_probabilities.shape)
