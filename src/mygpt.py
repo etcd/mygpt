@@ -1,7 +1,7 @@
 
 import torch
 
-from lib.basic_tokenizer import make_decoder, make_encoder
+from lib.basic_tokenizer import make_tokenizers
 
 
 def split_list(list, fraction):
@@ -21,8 +21,7 @@ def get_batch(data, block_size, batch_size):
 with open("sample_data/tinyshakespeare.txt", "r", encoding="utf-8") as f:
     text = f.read()
 alphabet = sorted(list(set(text)))
-encode = make_encoder(alphabet)
-decode = make_decoder(alphabet)
+[encode, decode] = make_tokenizers(alphabet)
 
 data = torch.tensor(encode(text), dtype=torch.long)
 [train_data, validate_data] = split_list(data, 0.9)

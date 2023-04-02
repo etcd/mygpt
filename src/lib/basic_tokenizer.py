@@ -3,17 +3,19 @@
 # TikToken by OpenAI
 
 
-def make_encoder(alphabet, other=[]):
+def make_tokenizers(alphabet, special=[]):
+    len_special = len(special)
+
     def encode(str):
-        other_chars = {ch: len(alphabet)+i for i, ch in enumerate(other)}
-        stoi = {ch: i for i, ch in enumerate(alphabet)} | other_chars
+        other_chars = {ch: i for i, ch in enumerate(special)}
+        stoi = other_chars | {
+            ch: i+len_special for i, ch in enumerate(alphabet)}
         return [stoi[ch] for ch in str]
-    return encode
 
-
-def make_decoder(alphabet, other=[]):
     def decode(ints):
-        other_chars = {len(alphabet)+i: ch for i, ch in enumerate(other)}
-        itos = {i: ch for i, ch in enumerate(alphabet)} | other_chars
+        other_chars = {i: ch for i, ch in enumerate(special)}
+        itos = other_chars | {
+            i+len_special: ch for i, ch in enumerate(alphabet)}
         return "".join([itos[i] for i in ints])
-    return decode
+
+    return [encode, decode]
