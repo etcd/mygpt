@@ -1,5 +1,10 @@
+from lib.basic_tokenizer import make_tokenizers
 from lib.bigrams.get_bigrams import get_bigrams
 import torch
+
+words = open('sample_data/names.txt', 'r').read().splitlines()
+alphabet = sorted(list(set(''.join(words))))
+(encode, decode) = make_tokenizers(alphabet, ['.'])
 
 xs, ys = [], []
 for word in words[:1]:
@@ -18,6 +23,6 @@ print(xenc, xenc.shape)
 
 W = torch.randn(27, 27)
 logits = xenc @ W  # log counts
-prob = bigrams / bigrams.sum(1, keepdim=True)
+counts = logits.exp()
+prob = counts / counts.sum(1, keepdim=True)
 print(logits.exp())
-print(prob[0].sum())
