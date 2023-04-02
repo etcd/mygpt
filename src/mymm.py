@@ -29,7 +29,8 @@ for word in words:
 # plt.axis('off')
 # plt.show()
 
-probabilities = bigrams/bigrams.sum(1, keepdim=True)
+bigrams_plus_one = bigrams + 1
+probabilities = bigrams_plus_one/bigrams_plus_one.sum(1, keepdim=True)
 
 # generate a name
 
