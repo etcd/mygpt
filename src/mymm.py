@@ -1,13 +1,7 @@
-import math
-
-import torch
 from lib.basic_tokenizer import make_tokenizers
 from lib.bigrams.get_log_likelihood import get_log_likelihood
 from lib.bigrams.count import count_bigrams
-from lib.bigrams.generate_word import generate_word
-from lib.bigrams.get_bigrams import get_bigrams
 from lib.math.get_perplexity import get_perplexity
-# from lib.bigrams.plot import plot_bigrams
 
 words = open('sample_data/names.txt', 'r').read().splitlines()
 alphabet = sorted(list(set(''.join(words))))
