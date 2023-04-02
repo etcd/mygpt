@@ -16,13 +16,30 @@ for word in words:
     for c1, c2 in zip(encoded_chars, encoded_chars[1:]):
         bigrams[c1][c2] += 1
 
-plt.figure(figsize=(15, 15))
-plt.imshow(bigrams, cmap="Blues")
-for i in range(27):
-    for j in range(27):
-        plt.text(j, i, decode([i, j]),
-                 ha='center', va='bottom', color="gray")
-        plt.text(j, i, bigrams[i, j].item(),
-                 ha='center', va='top', color="gray")
-plt.axis('off')
-plt.show()
+# plot the bigrams
+
+# plt.figure(figsize=(15, 15))
+# plt.imshow(bigrams, cmap="Blues")
+# for i in range(27):
+#     for j in range(27):
+#         plt.text(j, i, decode([i, j]),
+#                  ha='center', va='bottom', color="gray")
+#         plt.text(j, i, bigrams[i, j].item(),
+#                  ha='center', va='top', color="gray")
+# plt.axis('off')
+# plt.show()
+
+# generate a name
+
+row_num = 0
+encoded_out = []
+while True:
+    row = bigrams[row_num]
+    probabilities = row/row.sum()
+    row_num = torch.multinomial(
+        probabilities, num_samples=1, replacement=True,).item()
+    encoded_out.append(row_num)
+    if (row_num == 0):
+        break
+
+print(decode(encoded_out))
