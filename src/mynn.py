@@ -6,8 +6,9 @@ from lib.nn.generate_word import generate_word
 from lib.nn.softmax import get_softmax
 
 words = open('sample_data/names.txt', 'r').read().splitlines()
-alphabet = sorted(list(set(''.join(words))))
-(encode, decode) = make_tokenizers(alphabet, ['.'])
+alphabet = ['.'] + sorted(list(set(''.join(words))))
+alphabet_size = len(alphabet)
+(encode, decode) = make_tokenizers(alphabet)
 
 xs, ys = [], []
 for word in words:
@@ -20,9 +21,10 @@ for word in words:
 xs_tensor = torch.tensor(xs)
 ys_tensor = torch.tensor(ys)
 
-xenc = torch.nn.functional.one_hot(xs_tensor, num_classes=27).float()
+xenc = torch.nn.functional.one_hot(
+    xs_tensor, num_classes=alphabet_size).float()
 
-neural_net = torch.randn((27, 27), requires_grad=True)
+neural_net = torch.randn((alphabet_size, alphabet_size), requires_grad=True)
 
 # gradient descent
 for i in range(30):
@@ -39,4 +41,4 @@ for i in range(30):
     neural_net.data += -50 * neural_net.grad  # type: ignore
 
 for _ in range(5):
-    print(generate_word(neural_net, decode))
+    print(generate_word(neural_net, decode, alphabet_size))
