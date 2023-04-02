@@ -31,15 +31,21 @@ for word in words:
 
 # generate a name
 
-row_num = 0
-encoded_out = []
-while True:
-    row = bigrams[row_num]
-    probabilities = row/row.sum()
-    row_num = torch.multinomial(
-        probabilities, num_samples=1, replacement=True,).item()
-    encoded_out.append(row_num)
-    if (row_num == 0):
-        break
 
-print(decode(encoded_out))
+def generate_name(generator=None):
+    row_num = 0
+    encoded_out = []
+    while True:
+        row = bigrams[row_num]
+        probabilities = row/row.sum()
+        row_num = torch.multinomial(
+            probabilities, num_samples=1, replacement=True, generator=generator).item()
+        encoded_out.append(row_num)
+        if (row_num == 0):
+            break
+
+    return decode(encoded_out)
+
+
+generator = torch.Generator().manual_seed(2147483647)
+print([generate_name(generator) for _ in range(20)])
