@@ -1,6 +1,6 @@
 import torch
-import matplotlib.pyplot as plt
 from lib.basic_tokenizer import make_tokenizers
+from lib.plot_bigrams import plot_bigrams
 
 words = open('sample_data/names.txt', 'r').read().splitlines()
 
@@ -18,16 +18,7 @@ for word in words:
 
 # plot the bigrams
 
-# plt.figure(figsize=(15, 15))
-# plt.imshow(bigrams, cmap="Blues")
-# for i in range(27):
-#     for j in range(27):
-#         plt.text(j, i, decode([i, j]),
-#                  ha='center', va='bottom', color="gray")
-#         plt.text(j, i, bigrams[i, j].item(),
-#                  ha='center', va='top', color="gray")
-# plt.axis('off')
-# plt.show()
+plot_bigrams(bigrams, decode)
 
 bigrams_plus_one = bigrams + 1  # model smoothing with +1
 probabilities = bigrams_plus_one/bigrams_plus_one.sum(1, keepdim=True)
