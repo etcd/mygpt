@@ -1,12 +1,13 @@
 from typing import Callable
 import torch
 
+from lib.bigrams.get_encoded_bigrams import get_encoded_bigrams
+
 
 def count_bigrams(words: list[str], encode: Callable[[str], list[int]]):
-    bigrams = torch.zeros((27, 27), dtype=torch.int32)
+    bigram_counts = torch.zeros((27, 27), dtype=torch.int32)
     for word in words:
-        encoded = encode('.' + word + '.')
-        for c1, c2 in zip(encoded, encoded[1:]):
-            bigrams[c1][c2] += 1
+        for c1, c2 in get_encoded_bigrams(word, encode):
+            bigram_counts[c1][c2] += 1
 
-    return bigrams
+    return bigram_counts
