@@ -1,3 +1,11 @@
+## Additional dependencies
+
+Please install the following:
+
+```
+pip install mypy data-science-types
+```
+
 ## Static typing
 
 Run with `mypy`:
