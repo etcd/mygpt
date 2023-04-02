@@ -1,3 +1,11 @@
+## Static typing
+
+Run with `mypy`:
+
+```
+mypy src/mymm.py
+```
+
 ## Sample data
 
 tinyshakespeare.txt:
