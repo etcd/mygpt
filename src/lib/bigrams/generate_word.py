@@ -2,7 +2,11 @@ from typing import Callable, Union
 import torch
 
 
-def generate_word(probabilities: torch.Tensor, decode: Callable[[list[int]], str], generator: Union[torch.Generator, None] = None):
+def generate_word(
+        probabilities: torch.Tensor,
+        decode: Callable[[list[int]], str],
+        generator: Union[torch.Generator, None] = None
+):
     encoded_out: list[int] = []
     current_char = 0
     while True:

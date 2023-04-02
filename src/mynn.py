@@ -1,6 +1,7 @@
 from lib.basic_tokenizer import make_tokenizers
 from lib.bigrams.get_bigrams import get_bigrams
 import torch
+from lib.nn.generate_word import generate_word
 
 from lib.nn.softmax import get_softmax
 
@@ -24,11 +25,11 @@ xenc = torch.nn.functional.one_hot(xs_tensor, num_classes=27).float()
 neural_net = torch.randn((27, 27), requires_grad=True)
 
 # gradient descent
-for i in range(100):
+for i in range(30):
     # forward pass
     next_letter_probabilities = get_softmax(xenc @ neural_net)
     loss = -next_letter_probabilities[range(len(ys)), ys].log().mean()
-    print(loss.item())
+    # print(loss.item())
 
     # backward pass
     neural_net.grad = None
@@ -36,3 +37,6 @@ for i in range(100):
 
     # update weights
     neural_net.data += -50 * neural_net.grad  # type: ignore
+
+for _ in range(5):
+    print(generate_word(neural_net, decode))
