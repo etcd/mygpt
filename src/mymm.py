@@ -20,7 +20,7 @@ plt.figure(figsize=(15, 15))
 plt.imshow(bigrams, cmap="Blues")
 for i in range(28):
     for j in range(28):
-        plt.text(j, i, decode([i])+decode([j]),
+        plt.text(j, i, decode([i, j]),
                  ha='center', va='bottom', color="gray")
         plt.text(j, i, bigrams[i, j].item(),
                  ha='center', va='top', color="gray")
