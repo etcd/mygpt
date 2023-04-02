@@ -17,7 +17,8 @@ bigrams = count_bigrams(words, encode)
 bigrams_plus_one = bigrams + 1  # model smoothing with +1
 probabilities = bigrams_plus_one/bigrams_plus_one.sum(1, keepdim=True)
 
-print([generate_word(probabilities, decode) for _ in range(5)])
+# for _ in range(5):
+#     print(generate_word(probabilities, decode))
 
 (log_likelihood, n) = calculate_likelihood(probabilities, words, encode)
 
