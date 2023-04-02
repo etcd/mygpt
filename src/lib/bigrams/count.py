@@ -1,7 +1,8 @@
+from typing import Callable
 import torch
 
 
-def count_bigrams(words: list[str], encode):
+def count_bigrams(words: list[str], encode: Callable[[str], list[int]]):
     bigrams = torch.zeros((27, 27), dtype=torch.int32)
     for word in words:
         chars = ['.'] + list(word) + ["."]

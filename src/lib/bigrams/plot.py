@@ -1,7 +1,9 @@
+from typing import Callable
 import matplotlib.pyplot as plt
+from torch import Tensor
 
 
-def plot_bigrams(bigrams, decode):
+def plot_bigrams(bigrams: Tensor, decode: Callable[[list[int]], str]):
     plt.figure(figsize=(15, 15))
     plt.imshow(bigrams, cmap="Blues")
     for x in range(27):
