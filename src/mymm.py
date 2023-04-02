@@ -1,23 +1,13 @@
 import torch
 from lib.basic_tokenizer import make_tokenizers
+from lib.count_bigrams import count_bigrams
 from lib.plot_bigrams import plot_bigrams
 
 words = open('sample_data/names.txt', 'r').read().splitlines()
-
-
 alphabet = sorted(list(set(''.join(words))))
-[encode, decode] = make_tokenizers(alphabet, ['.'])
+(encode, decode) = make_tokenizers(alphabet, ['.'])
 
-
-bigrams = torch.zeros((27, 27), dtype=torch.int32)
-for word in words:
-    chars = ['.'] + list(word) + ["."]
-    encoded_chars = encode(chars)
-    for c1, c2 in zip(encoded_chars, encoded_chars[1:]):
-        bigrams[c1][c2] += 1
-
-# plot the bigrams
-
+bigrams = count_bigrams(words, encode)
 plot_bigrams(bigrams, decode)
 
 bigrams_plus_one = bigrams + 1  # model smoothing with +1
