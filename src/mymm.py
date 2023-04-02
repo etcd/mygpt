@@ -50,11 +50,16 @@ def generate_name(generator=None):
 generator = torch.Generator().manual_seed(2147483647)
 print([generate_name(generator) for _ in range(5)])
 
-
-for word in words[:3]:
+log_likelihood = 0
+n = 0
+for word in words:
     chars = ['.'] + list(word) + ["."]
     encoded_chars = encode(chars)
     for c1, c2 in zip(encoded_chars, encoded_chars[1:]):
         probability = probabilities[c1][c2]
         log_probability = torch.log(probability)
-        print(f"{decode([c1, c2])} {probability:.4f} {log_probability:.4f}")
+        log_likelihood += log_probability
+        n += 1
+print(f"Negative log likelihood: {-log_likelihood:.4f}")
+print(f"Average negative log likelihood: {-log_likelihood/n:.4f}")
+print(f"Perplexity: {torch.exp(-log_likelihood/n):.4f}")
