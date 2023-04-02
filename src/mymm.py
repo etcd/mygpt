@@ -29,19 +29,19 @@ for word in words:
 # plt.axis('off')
 # plt.show()
 
+probabilities = bigrams/bigrams.sum(1, keepdim=True)
+
 # generate a name
 
 
 def generate_name(generator=None):
-    row_num = 0
     encoded_out = []
+    current_char = 0
     while True:
-        row = bigrams[row_num]
-        probabilities = row/row.sum()
-        row_num = torch.multinomial(
-            probabilities, num_samples=1, replacement=True, generator=generator).item()
-        encoded_out.append(row_num)
-        if (row_num == 0):
+        current_char = torch.multinomial(
+            probabilities[current_char], num_samples=1, replacement=True, generator=generator).item()
+        encoded_out.append(current_char)
+        if (current_char == 0):
             break
 
     return decode(encoded_out)
