@@ -2,6 +2,8 @@ from lib.basic_tokenizer import make_tokenizers
 from lib.bigrams.get_bigrams import get_bigrams
 import torch
 
+from lib.nn.softmax import get_softmax
+
 words = open('sample_data/names.txt', 'r').read().splitlines()
 alphabet = sorted(list(set(''.join(words))))
 (encode, decode) = make_tokenizers(alphabet, ['.'])
@@ -18,11 +20,7 @@ xs_tensor = torch.tensor(xs)
 ys_tensor = torch.tensor(ys)
 
 xenc = torch.nn.functional.one_hot(xs_tensor, num_classes=27).float()
-print(xenc, xenc.shape)
-
 
 W = torch.randn(27, 27)
-logits = xenc @ W  # log counts
-counts = logits.exp()
-prob = counts / counts.sum(1, keepdim=True)
-print(logits.exp())
+probs = get_softmax(xenc @ W)
+print(probs)
