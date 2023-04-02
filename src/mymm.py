@@ -49,3 +49,12 @@ def generate_name(generator=None):
 
 generator = torch.Generator().manual_seed(2147483647)
 print([generate_name(generator) for _ in range(5)])
+
+
+for word in words[:3]:
+    chars = ['.'] + list(word) + ["."]
+    encoded_chars = encode(chars)
+    for c1, c2 in zip(encoded_chars, encoded_chars[1:]):
+        probability = probabilities[c1][c2]
+        log_probability = torch.log(probability)
+        print(f"{decode([c1, c2])} {probability:.4f} {log_probability:.4f}")
