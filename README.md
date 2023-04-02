@@ -1,6 +1,12 @@
-## Additional dependencies
+## Dependencies
 
-Please install the following:
+Main dependencies:
+
+```
+pip install -r src/requirements.txt
+```
+
+Additional dependencies for typechecking:
 
 ```
 pip install mypy data-science-types
