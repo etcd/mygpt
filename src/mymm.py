@@ -48,4 +48,4 @@ def generate_name(generator=None):
 
 
 generator = torch.Generator().manual_seed(2147483647)
-print([generate_name(generator) for _ in range(20)])
+print([generate_name(generator) for _ in range(5)])
