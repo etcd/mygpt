@@ -1,8 +1,11 @@
 import math
+
+import torch
 from lib.basic_tokenizer import make_tokenizers
 from lib.bigrams.calculate_likelihood import calculate_likelihood
 from lib.bigrams.count import count_bigrams
 from lib.bigrams.generate_word import generate_word
+from lib.bigrams.get_encoded_bigrams import get_encoded_bigrams
 from lib.math.get_perplexity import get_perplexity
 # from lib.bigrams.plot import plot_bigrams
 
@@ -21,5 +24,5 @@ probabilities = bigrams_plus_one/bigrams_plus_one.sum(1, keepdim=True)
 
 (log_likelihood, n) = calculate_likelihood(probabilities, words, encode)
 
-print(f"Average NLL: {-log_likelihood/n:.4f}")
-print(f"Perplexity: {get_perplexity(log_likelihood, n):.4f}")
+# print(f"Average NLL: {-log_likelihood/n:.4f}")
+# print(f"Perplexity: {get_perplexity(log_likelihood, n):.4f}")
