@@ -26,6 +26,12 @@ python src/mymm.py
 
 ## Sample data
 
+names.txt:
+
+```
+https://github.com/karpathy/makemore/blob/master/names.txt
+```
+
 tinyshakespeare.txt:
 
 ```
