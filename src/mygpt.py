@@ -1,6 +1,7 @@
 
-from basic_tokenizer import make_encoder, make_decoder
 import torch
+
+from lib.basic_tokenizer import make_decoder, make_encoder
 
 
 def split_list(list, fraction):
