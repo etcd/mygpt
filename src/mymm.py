@@ -1,6 +1,8 @@
 import math
+from typing import Callable
 import torch
 from lib.basic_tokenizer import make_tokenizers
+from lib.bigrams.calculate_likelihood import calculate_likelihood
 from lib.bigrams.count import count_bigrams
 from lib.bigrams.generate_word import generate_word
 # from lib.bigrams.plot import plot_bigrams
@@ -17,16 +19,7 @@ probabilities = bigrams_plus_one/bigrams_plus_one.sum(1, keepdim=True)
 
 print([generate_word(probabilities, decode) for _ in range(5)])
 
-log_likelihood = 0.0
-n = 0
-for word in words:
-    chars = ['.'] + list(word) + ["."]
-    encoded_chars = encode(chars)
-    for c1, c2 in zip(encoded_chars, encoded_chars[1:]):
-        probability = probabilities[c1][c2]
-        log_probability = torch.log(probability)
-        log_likelihood += log_probability.item()
-        n += 1
-print(f"Negative log likelihood: {-log_likelihood:.4f}")
+(log_likelihood, n) = calculate_likelihood(probabilities, words, encode)
+
 print(f"Average negative log likelihood: {-log_likelihood/n:.4f}")
 print(f"Perplexity: {math.exp(-log_likelihood/n):.4f}")
