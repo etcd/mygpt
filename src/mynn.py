@@ -21,9 +21,18 @@ ys_tensor = torch.tensor(ys)
 
 xenc = torch.nn.functional.one_hot(xs_tensor, num_classes=27).float()
 
-W = torch.randn(27, 27)
+neural_net = torch.randn((27, 27), requires_grad=True)
 
-# forward pass
-next_letter_probabilities = get_softmax(xenc @ W)
-print(next_letter_probabilities)
-print(next_letter_probabilities.shape)
+# gradient descent
+for i in range(100):
+    # forward pass
+    next_letter_probabilities = get_softmax(xenc @ neural_net)
+    loss = -next_letter_probabilities[range(len(ys)), ys].log().mean()
+    print(loss.item())
+
+    # backward pass
+    neural_net.grad = None
+    loss.backward()
+
+    # update weights
+    neural_net.data += -50 * neural_net.grad  # type: ignore
