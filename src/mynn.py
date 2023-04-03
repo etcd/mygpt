@@ -9,14 +9,20 @@ words = open('sample_data/names.txt', 'r').read().splitlines()
 alphabet = ['.'] + sorted(list(set(''.join(words))))
 alphabet_size = len(alphabet)
 (encode, decode) = make_tokenizers(alphabet)
+encoded_words = [encode('.' + word + '.') for word in words]
 
-xs, ys = [], []
-for word in words:
-    encoded_word = encode('.' + word + '.')
-    encoded_bigrams = get_bigrams(encoded_word)
-    for c1, c2 in encoded_bigrams:
-        xs.append(c1)
-        ys.append(c2)
+
+def make_samples(encoded_words: list[list[int]]):
+    xs, ys = [], []
+    for encoded_word in encoded_words:
+        encoded_bigrams = get_bigrams(encoded_word)
+        for c1, c2 in encoded_bigrams:
+            xs.append(c1)
+            ys.append(c2)
+    return xs, ys
+
+
+xs, ys = make_samples(encoded_words)
 
 xs_tensor = torch.tensor(xs)
 ys_tensor = torch.tensor(ys)
