@@ -13,7 +13,7 @@ encoded_words = [encode(word + '.') for word in words]
 
 block_size = 3
 embedding_dims = 2
-hyper_dims = 200
+hyper_dims = 100
 
 
 def make_samples(encoded_words: list[list[int]]):
