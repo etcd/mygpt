@@ -68,3 +68,11 @@ for _ in range(1000):
     # update
     for p in parameters:
         p.data -= 0.1 * p.grad  # type: ignore
+
+# total loss
+
+emb = embedding_map[xs]
+h = torch.tanh(emb.view(-1, 6) @ hyper_weights + hyper_biases)
+logits = h @ hyper_weights2 + hyper_biases2
+loss = torch.nn.functional.cross_entropy(logits, ys)
+print(loss.item())
