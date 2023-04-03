@@ -50,12 +50,15 @@ parameter_count = sum(p.nelement() for p in parameters)
 print("Param count", parameter_count)
 
 for _ in range(1000):
+    # minibatch
+    idxs = torch.randint(0, len(xs), (32,))
+
     # forward pass
-    emb = embedding_map[xs]  # (tokens in words, block_size, embedding_dims)
+    emb = embedding_map[xs[idxs]]  # (token count, block_size, embedding_dims)
     h = torch.tanh(emb.view(-1, 6) @ hyper_weights + hyper_biases)
     logits = h @ hyper_weights2 + hyper_biases2
-    loss = torch.nn.functional.cross_entropy(logits, ys)
-    print(loss.item())
+    loss = torch.nn.functional.cross_entropy(logits, ys[idxs])
+    # print(loss.item())
 
     # backward pass
     for p in parameters:
