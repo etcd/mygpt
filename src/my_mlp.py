@@ -52,7 +52,7 @@ for p in params:
 
 print("Param count", sum(p.nelement() for p in params))
 
-for _ in range(TRAINING_EPOCHS):
+for i in range(TRAINING_EPOCHS):
     # minibatch
     idxs = torch.randint(0, len(xs_train), (MINIBATCH_SIZE,))
     batch = xs_train[idxs]
@@ -65,7 +65,8 @@ for _ in range(TRAINING_EPOCHS):
                                    @ hyper_weights + hyper_biases)
     logits = hyper_activations @ out_weights + out_biases
     loss = torch.nn.functional.cross_entropy(logits, labels)
-    # print(loss.item())
+    if i == TRAINING_EPOCHS-1:
+        print('Training loss', loss.item())
 
     # backward pass
     for p in params:
@@ -82,4 +83,4 @@ hyper_activations = torch.tanh(embedded_batch.view(-1, BLOCK_SIZE*EMBED_DIMS)
                                @ hyper_weights + hyper_biases)
 logits = hyper_activations @ out_weights + out_biases
 loss = torch.nn.functional.cross_entropy(logits, ys_dev)
-print(loss.item())
+print('Dev loss', loss.item())
