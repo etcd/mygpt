@@ -5,7 +5,7 @@ import torch
 from lib.list import split_list
 
 
-BLOCK_SIZE: Final[int] = 3
+BLOCK_SIZE: Final[int] = 4
 EMBED_DIMS: Final[int] = 10
 HYPER_DIMS: Final[int] = 100
 MINIBATCH_SIZE: Final[int] = 32
