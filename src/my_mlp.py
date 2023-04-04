@@ -8,8 +8,8 @@ from lib.list import split_list
 BLOCK_SIZE: Final[int] = 3
 EMBED_DIMS: Final[int] = 2
 HYPER_DIMS: Final[int] = 100
-MINIBATCH_SIZE: Final[int] = 100
-TRAINING_EPOCHS: Final[int] = 100000
+MINIBATCH_SIZE: Final[int] = 32
+TRAINING_EPOCHS: Final[int] = 50000
 LEARNING_RATE: Final[float] = 0.1
 
 words = open('sample_data/names.txt', 'r').read().splitlines()
