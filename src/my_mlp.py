@@ -56,6 +56,7 @@ for _ in range(TRAINING_EPOCHS):
     # minibatch
     idxs = torch.randint(0, len(xs_train), (MINIBATCH_SIZE,))
     batch = xs_train[idxs]
+    labels = ys_train[idxs]
 
     # forward pass
     # (alphabet size, block_size, embed_dims)
@@ -63,7 +64,7 @@ for _ in range(TRAINING_EPOCHS):
     hyper_activations = torch.tanh(embedded_batch.view(-1, BLOCK_SIZE*EMBED_DIMS)
                                    @ hyper_weights + hyper_biases)
     logits = hyper_activations @ out_weights + out_biases
-    loss = torch.nn.functional.cross_entropy(logits, ys_train[idxs])
+    loss = torch.nn.functional.cross_entropy(logits, labels)
     # print(loss.item())
 
     # backward pass
@@ -76,9 +77,9 @@ for _ in range(TRAINING_EPOCHS):
         p.data -= LEARNING_RATE * p.grad  # type: ignore
 
 # dev loss
-emb = embed_weights[xs_dev]
-h = torch.tanh(emb.view(-1, BLOCK_SIZE*EMBED_DIMS)
-               @ hyper_weights + hyper_biases)
-logits = h @ out_weights + out_biases
+embedded_batch = embed_weights[xs_dev]
+hyper_activations = torch.tanh(embedded_batch.view(-1, BLOCK_SIZE*EMBED_DIMS)
+                               @ hyper_weights + hyper_biases)
+logits = hyper_activations @ out_weights + out_biases
 loss = torch.nn.functional.cross_entropy(logits, ys_dev)
 print(loss.item())
