@@ -6,7 +6,7 @@ from lib.list import split_list
 
 
 BLOCK_SIZE: Final[int] = 3
-EMBED_DIMS: Final[int] = 2
+EMBED_DIMS: Final[int] = 10
 HYPER_DIMS: Final[int] = 100
 MINIBATCH_SIZE: Final[int] = 32
 TRAINING_EPOCHS: Final[int] = 50000
@@ -74,7 +74,7 @@ for _ in range(TRAINING_EPOCHS):
     for p in params:
         p.data -= LEARNING_RATE * p.grad  # type: ignore
 
-# total loss
+# dev loss
 emb = embed_weights[xs_dev]
 h = torch.tanh(emb.view(-1, BLOCK_SIZE*EMBED_DIMS)
                @ hyper_weights + hyper_biases)
