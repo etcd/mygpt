@@ -1,6 +1,8 @@
 from lib.basic_tokenizer import make_tokenizers
 import torch
 
+from lib.list import split_list
+
 
 block_size = 3
 embed_dims = 2
@@ -27,8 +29,11 @@ def make_samples(encoded_words: list[list[int]]):
 
 xs_list, ys_list = make_samples(encoded_words)
 
-xs = torch.tensor(xs_list)
-ys = torch.tensor(ys_list)
+xs_train_list, xs_test_list = split_list(xs_list, [0.8, 0.2])
+ys_train_list, ys_test_list = split_list(ys_list, [0.8, 0.2])
+
+xs_train, xs_test = torch.tensor(xs_train_list), torch.tensor(xs_test_list)
+ys_train, ys_test = torch.tensor(ys_train_list), torch.tensor(ys_test_list)
 
 embed_weights = torch.randn((alphabet_size, embed_dims))
 
@@ -45,15 +50,16 @@ for p in params:
 
 print("Param count", sum(p.nelement() for p in params))
 
-for _ in range(1000):
+for _ in range(10000):
     # minibatch
-    idxs = torch.randint(0, len(xs), (32,))
+    idxs = torch.randint(0, len(xs_train), (32,))
 
     # forward pass
-    emb = embed_weights[xs[idxs]]  # (token count, block_size, embed_dims)
+    # (token count, block_size, embed_dims)
+    emb = embed_weights[xs_train[idxs]]
     h = torch.tanh(emb.view(-1, 6) @ hyper_weights + hyper_biases)
     logits = h @ out_weights + out_biases
-    loss = torch.nn.functional.cross_entropy(logits, ys[idxs])
+    loss = torch.nn.functional.cross_entropy(logits, ys_train[idxs])
     # print(loss.item())
 
     # backward pass
@@ -66,8 +72,8 @@ for _ in range(1000):
         p.data -= 0.1 * p.grad  # type: ignore
 
 # total loss
-emb = embed_weights[xs]
+emb = embed_weights[xs_test]
 h = torch.tanh(emb.view(-1, 6) @ hyper_weights + hyper_biases)
 logits = h @ out_weights + out_biases
-loss = torch.nn.functional.cross_entropy(logits, ys)
+loss = torch.nn.functional.cross_entropy(logits, ys_test)
 print(loss.item())
