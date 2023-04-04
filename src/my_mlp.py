@@ -8,6 +8,9 @@ from lib.list import split_list
 BLOCK_SIZE: Final[int] = 3
 EMBED_DIMS: Final[int] = 2
 HYPER_DIMS: Final[int] = 100
+MINIBATCH_SIZE: Final[int] = 100
+TRAINING_EPOCHS: Final[int] = 100000
+LEARNING_RATE: Final[float] = 0.1
 
 words = open('sample_data/names.txt', 'r').read().splitlines()
 alphabet = ['.'] + sorted(list(set(''.join(words))))
@@ -49,14 +52,15 @@ for p in params:
 
 print("Param count", sum(p.nelement() for p in params))
 
-for _ in range(10000):
+for _ in range(TRAINING_EPOCHS):
     # minibatch
-    idxs = torch.randint(0, len(xs_train), (32,))
+    idxs = torch.randint(0, len(xs_train), (MINIBATCH_SIZE,))
 
     # forward pass
     # (token count, block_size, embed_dims)
     emb = embed_weights[xs_train[idxs]]
-    h = torch.tanh(emb.view(-1, 6) @ hyper_weights + hyper_biases)
+    h = torch.tanh(emb.view(-1, BLOCK_SIZE*EMBED_DIMS)
+                   @ hyper_weights + hyper_biases)
     logits = h @ out_weights + out_biases
     loss = torch.nn.functional.cross_entropy(logits, ys_train[idxs])
     # print(loss.item())
@@ -68,11 +72,12 @@ for _ in range(10000):
 
     # update
     for p in params:
-        p.data -= 0.1 * p.grad  # type: ignore
+        p.data -= LEARNING_RATE * p.grad  # type: ignore
 
 # total loss
 emb = embed_weights[xs_test]
-h = torch.tanh(emb.view(-1, 6) @ hyper_weights + hyper_biases)
+h = torch.tanh(emb.view(-1, BLOCK_SIZE*EMBED_DIMS)
+               @ hyper_weights + hyper_biases)
 logits = h @ out_weights + out_biases
 loss = torch.nn.functional.cross_entropy(logits, ys_test)
 print(loss.item())
