@@ -1,12 +1,13 @@
+from typing import Final
 from lib.basic_tokenizer import make_tokenizers
 import torch
 
 from lib.list import split_list
 
 
-BLOCK_SIZE = 3
-EMBED_DIMS = 2
-HYPER_DIMS = 100
+BLOCK_SIZE: Final[int] = 3
+EMBED_DIMS: Final[int] = 2
+HYPER_DIMS: Final[int] = 100
 
 words = open('sample_data/names.txt', 'r').read().splitlines()
 alphabet = ['.'] + sorted(list(set(''.join(words))))
