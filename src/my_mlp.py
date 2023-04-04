@@ -4,9 +4,9 @@ import torch
 from lib.list import split_list
 
 
-block_size = 3
-embed_dims = 2
-hyper_dims = 100
+BLOCK_SIZE = 3
+EMBED_DIMS = 2
+HYPER_DIMS = 100
 
 words = open('sample_data/names.txt', 'r').read().splitlines()
 alphabet = ['.'] + sorted(list(set(''.join(words))))
@@ -18,7 +18,7 @@ encoded_words = [encode(word + '.') for word in words]
 def make_samples(encoded_words: list[list[int]]):
     xs, ys = [], []
     for encoded_word in encoded_words:
-        context = [0] * block_size
+        context = [0] * BLOCK_SIZE
         for c_enc in encoded_word:
             xs.append(context)
             ys.append(c_enc)
@@ -33,12 +33,12 @@ ys_split = split_list(ys_list, [0.8, 0.1, 0.1])  # train, dev, test
 xs_train, xs_dev, xs_test = [torch.tensor(l) for l in xs_split]
 ys_train, ys_dev, ys_test = [torch.tensor(l) for l in ys_split]
 
-embed_weights = torch.randn((alphabet_size, embed_dims))
+embed_weights = torch.randn((alphabet_size, EMBED_DIMS))
 
-hyper_weights = torch.randn((block_size*embed_dims, hyper_dims))
-hyper_biases = torch.randn(hyper_dims)
+hyper_weights = torch.randn((BLOCK_SIZE*EMBED_DIMS, HYPER_DIMS))
+hyper_biases = torch.randn(HYPER_DIMS)
 
-out_weights = torch.randn((hyper_dims, alphabet_size))
+out_weights = torch.randn((HYPER_DIMS, alphabet_size))
 out_biases = torch.randn(alphabet_size)
 
 params = [embed_weights, hyper_weights, hyper_biases, out_weights, out_biases]
