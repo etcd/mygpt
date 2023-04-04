@@ -75,9 +75,9 @@ for _ in range(TRAINING_EPOCHS):
         p.data -= LEARNING_RATE * p.grad  # type: ignore
 
 # total loss
-emb = embed_weights[xs_test]
+emb = embed_weights[xs_dev]
 h = torch.tanh(emb.view(-1, BLOCK_SIZE*EMBED_DIMS)
                @ hyper_weights + hyper_biases)
 logits = h @ out_weights + out_biases
-loss = torch.nn.functional.cross_entropy(logits, ys_test)
+loss = torch.nn.functional.cross_entropy(logits, ys_dev)
 print(loss.item())
