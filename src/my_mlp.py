@@ -29,11 +29,13 @@ def make_samples(encoded_words: list[list[int]]):
 
 xs_list, ys_list = make_samples(encoded_words)
 
-xs_train_list, xs_test_list = split_list(xs_list, [0.8, 0.2])
-ys_train_list, ys_test_list = split_list(ys_list, [0.8, 0.2])
+xs_train_list, xs_dev_list, xs_test_list = split_list(xs_list, [0.8, 0.1, 0.1])
+ys_train_list, ys_dev_list, ys_test_list = split_list(ys_list, [0.8, 0.1, 0.1])
 
-xs_train, xs_test = torch.tensor(xs_train_list), torch.tensor(xs_test_list)
-ys_train, ys_test = torch.tensor(ys_train_list), torch.tensor(ys_test_list)
+xs_train, xs_dev, xs_test = torch.tensor(
+    xs_train_list), torch.tensor(xs_dev_list), torch.tensor(xs_test_list)
+ys_train, ys_dev, ys_test = torch.tensor(
+    ys_train_list), torch.tensor(ys_dev_list), torch.tensor(ys_test_list)
 
 embed_weights = torch.randn((alphabet_size, embed_dims))
 
