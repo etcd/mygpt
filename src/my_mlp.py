@@ -9,7 +9,7 @@ from lib.list import split_list
 from lib.nn.softmax import get_softmax
 
 
-BLOCK_SIZE: Final[int] = 3
+CTX_SIZE: Final[int] = 3
 EMBED_DIMS: Final[int] = 12
 HYPER_DIMS: Final[int] = 200
 MINIBATCH_SIZE: Final[int] = 38
@@ -30,7 +30,7 @@ encoded_words = [encode(word + '.') for word in words]
 def make_samples(encoded_words: list[list[int]]):
     xs, ys = [], []
     for encoded_word in encoded_words:
-        context = [0] * BLOCK_SIZE
+        context = [0] * CTX_SIZE
         for c_enc in encoded_word:
             xs.append(context)
             ys.append(c_enc)
@@ -46,7 +46,7 @@ xs_train, xs_dev, xs_test = [torch.tensor(l) for l in xs_split]
 ys_train, ys_dev, ys_test = [torch.tensor(l) for l in ys_split]
 
 embed_weights = torch.randn((alphabet_size, EMBED_DIMS))
-hyper_weights = torch.randn((BLOCK_SIZE*EMBED_DIMS, HYPER_DIMS))
+hyper_weights = torch.randn((CTX_SIZE*EMBED_DIMS, HYPER_DIMS))
 hyper_biases = torch.randn(HYPER_DIMS)
 out_weights = torch.randn((HYPER_DIMS, alphabet_size))
 out_biases = torch.randn(alphabet_size)
@@ -62,14 +62,14 @@ losses = []
 steps = range(TRAINING_EPOCHS)
 for i in range(TRAINING_EPOCHS):
     # minibatch
-    idxs = torch.randint(0, len(xs_train), (MINIBATCH_SIZE,))
+    idxs = torch.randint(0, xs_train.shape[0], (MINIBATCH_SIZE,))
     batch = xs_train[idxs]
     labels = ys_train[idxs]
 
     # forward pass
-    # (alphabet size, block_size, embed_dims)
+    # (alphabet size, ctx_size, embed_dims)
     embedded_batch = embed_weights[batch]
-    hyper_activations = torch.tanh(embedded_batch.view(-1, BLOCK_SIZE*EMBED_DIMS)
+    hyper_activations = torch.tanh(embedded_batch.view(-1, CTX_SIZE*EMBED_DIMS)
                                    @ hyper_weights + hyper_biases)
     logits = hyper_activations @ out_weights + out_biases
     loss = torch.nn.functional.cross_entropy(logits, labels)
@@ -93,7 +93,7 @@ print('Training loss', losses[-1])
 
 # dev loss
 embedded_batch = embed_weights[xs_dev]
-hyper_activations = torch.tanh(embedded_batch.view(-1, BLOCK_SIZE*EMBED_DIMS)
+hyper_activations = torch.tanh(embedded_batch.view(-1, CTX_SIZE*EMBED_DIMS)
                                @ hyper_weights + hyper_biases)
 logits = hyper_activations @ out_weights + out_biases
 loss = torch.nn.functional.cross_entropy(logits, ys_dev)
@@ -102,11 +102,11 @@ print('Dev loss', loss.item())
 
 def generate_word():
     encoded_chars = []
-    context = [0] * BLOCK_SIZE
+    context = [0] * CTX_SIZE
     while True:
         embedded = embed_weights[context]
         hyper_activations = torch.tanh(
-            embedded.view(-1, BLOCK_SIZE*EMBED_DIMS)@hyper_weights + hyper_biases)
+            embedded.view(-1, CTX_SIZE*EMBED_DIMS)@hyper_weights + hyper_biases)
         logits = hyper_activations @ out_weights + out_biases
         probabilities = get_softmax(logits)
         current_char = int(torch.multinomial(
