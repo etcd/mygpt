@@ -68,7 +68,7 @@ def evaluate_loss(ins: torch.Tensor, outs: torch.Tensor):
 
     hyper_pre_activate = (hyper_pre_activate - hyper_pre_activate.mean(0,
                           keepdim=True)) / hyper_pre_activate.std(0, keepdim=True)
-
+    # batch norm
     hyper_activations = torch.tanh(hyper_pre_activate)
     logits = hyper_activations @ out_weights + out_biases  # log counts
 
