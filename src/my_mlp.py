@@ -8,11 +8,11 @@ from lib.nn.softmax import get_softmax
 
 
 BLOCK_SIZE: Final[int] = 3
-EMBED_DIMS: Final[int] = 10
+EMBED_DIMS: Final[int] = 20
 HYPER_DIMS: Final[int] = 200
 MINIBATCH_SIZE: Final[int] = 32
 TRAINING_EPOCHS: Final[int] = 250000
-LEARN_RATE_START: Final[float] = 0.3
+LEARN_RATE_START: Final[float] = 0.2
 LEARN_RATE_DECAY: Final[float] = 10
 
 words = open('sample_data/names.txt', 'r').read().splitlines()
