@@ -1,5 +1,7 @@
 import random
 from typing import Final
+
+from matplotlib import pyplot as plt
 from lib.basic_tokenizer import make_tokenizers
 import torch
 
@@ -58,6 +60,8 @@ for p in params:
 
 print("Param count", sum(p.nelement() for p in params))
 
+losses = []
+steps = range(TRAINING_EPOCHS)
 for i in range(TRAINING_EPOCHS):
     # minibatch
     idxs = torch.randint(0, len(xs_train), (MINIBATCH_SIZE,))
@@ -71,8 +75,7 @@ for i in range(TRAINING_EPOCHS):
                                    @ hyper_weights + hyper_biases)
     logits = hyper_activations @ out_weights + out_biases
     loss = torch.nn.functional.cross_entropy(logits, labels)
-    if i == TRAINING_EPOCHS-1:
-        print('Training loss', loss.item())
+    losses.append(loss.item())
 
     # backward pass
     for p in params:
@@ -84,6 +87,11 @@ for i in range(TRAINING_EPOCHS):
                      (-i/TRAINING_EPOCHS))
     for p in params:
         p.data -= LEARNING_RATE * p.grad  # type: ignore
+
+print('Training loss', losses[-1])
+
+# plt.plot(steps, losses)
+# plt.show()
 
 # dev loss
 embedded_batch = embed_weights[xs_dev]
