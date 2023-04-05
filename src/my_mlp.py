@@ -65,7 +65,7 @@ def evaluate_loss(ins: torch.Tensor, outs: torch.Tensor):
     hyper_pre_activate = embedded.view(
         -1, CTX_SIZE * EMBED_DIMS) @ hyper_weights + hyper_biases
     hyper_activations = torch.tanh(hyper_pre_activate)
-    logits = hyper_activations @ out_weights + out_biases
+    logits = hyper_activations @ out_weights + out_biases  # log counts
     return torch.nn.functional.cross_entropy(logits, outs)
 
 
