@@ -12,8 +12,8 @@ from lib.nn.softmax import get_softmax
 CTX_SIZE: Final[int] = 3
 EMBED_DIMS: Final[int] = 12
 HYPER_DIMS: Final[int] = 200
-MINIBATCH_SIZE: Final[int] = 38
-TRAINING_EPOCHS: Final[int] = 200000
+MINIBATCH_SIZE: Final[int] = 32
+TRAINING_EPOCHS: Final[int] = 30000
 LEARN_RATE_START: Final[float] = 0.2
 LEARN_RATE_DECAY: Final[float] = 13
 
@@ -49,15 +49,14 @@ ys_train, ys_dev, ys_test = [torch.tensor(l) for l in ys_split]
 embed_weights = torch.randn((alphabet_size, EMBED_DIMS))
 hyper_weights = torch.randn(
     (CTX_SIZE*EMBED_DIMS, HYPER_DIMS)) * (5/3)/(CTX_SIZE*EMBED_DIMS)**.5
-hyper_biases = torch.randn(HYPER_DIMS) * 0.01
 out_weights = torch.randn((HYPER_DIMS, alphabet_size)) * (5/3)/(HYPER_DIMS)**.5
 out_biases = torch.randn(alphabet_size) * 0.01
 
-batchnorm_gains = torch.randn((1, HYPER_DIMS))
+batchnorm_gains = torch.ones((1, HYPER_DIMS))
 batchnorm_biases = torch.zeros((1, HYPER_DIMS))
 
-params = [embed_weights, hyper_weights, hyper_biases,
-          out_weights, out_biases, batchnorm_gains, batchnorm_biases]
+params = [embed_weights, hyper_weights, out_weights,
+          out_biases, batchnorm_gains, batchnorm_biases]
 
 for p in params:
     p.requires_grad = True
@@ -68,11 +67,14 @@ print("Param count", sum(p.nelement() for p in params))
 def evaluate_loss(ins: torch.Tensor, outs: torch.Tensor):
     embedded = embed_weights[ins]  # (ins size, ctx size, embed dims)
     hyper_pre_activate = embedded.view(
-        -1, CTX_SIZE * EMBED_DIMS) @ hyper_weights + hyper_biases
+        -1, CTX_SIZE * EMBED_DIMS) @ hyper_weights
 
     # batch norm
-    hyper_pre_activate = batchnorm_gains*(hyper_pre_activate - hyper_pre_activate.mean(
-        0,  keepdim=True)) / hyper_pre_activate.std(0, keepdim=True) + batchnorm_biases
+    batchnorm_mean = hyper_pre_activate.mean(0,  keepdim=True)
+    batchnorm_std = hyper_pre_activate.std(0, keepdim=True)
+    hyper_pre_activate = batchnorm_gains * \
+        (hyper_pre_activate - batchnorm_mean) / \
+        (batchnorm_std + 1e-100) + batchnorm_biases
 
     hyper_activations = torch.tanh(hyper_pre_activate)
     logits = hyper_activations @ out_weights + out_biases  # log counts
@@ -82,18 +84,25 @@ def evaluate_loss(ins: torch.Tensor, outs: torch.Tensor):
     #            cmap='gray', interpolation='nearest')
     # plt.show()
 
-    return torch.nn.functional.cross_entropy(logits, outs)
+    return torch.nn.functional.cross_entropy(logits, outs), batchnorm_mean, batchnorm_std
 
 
 losses = []
 steps = range(TRAINING_EPOCHS)
+batchnorm_mean_running = torch.zeros((1, HYPER_DIMS))
+batchnorm_std_running = torch.ones((1, HYPER_DIMS))
 for i in range(TRAINING_EPOCHS):
     # minibatch
     idxs = torch.randint(0, xs_train.shape[0], (MINIBATCH_SIZE,))
 
     # forward pass
-    loss = evaluate_loss(xs_train[idxs], ys_train[idxs])
+    loss, batchnorm_mean_i, batchnorm_std_i = evaluate_loss(
+        xs_train[idxs], ys_train[idxs])
     losses.append(loss.item())
+
+    with torch.no_grad():
+        batchnorm_mean_running = .999*batchnorm_mean_running+0.001*batchnorm_mean_i
+        batchnorm_std_running = .999*batchnorm_std_running+0.001*batchnorm_std_i
 
     # backward pass
     for p in params:
@@ -115,7 +124,7 @@ plt.plot(steps, losses)
 plt.show()
 
 # dev loss
-loss = evaluate_loss(xs_dev, ys_dev)
+loss, _, _ = evaluate_loss(xs_dev, ys_dev)
 print('Dev loss', loss.item())
 
 
@@ -124,8 +133,15 @@ def generate_word():
     context = [0] * CTX_SIZE
     while True:
         embedded = embed_weights[context]
-        hyper_activations = torch.tanh(
-            embedded.view(-1, CTX_SIZE*EMBED_DIMS)@hyper_weights + hyper_biases)
+        hyper_pre_activate = embedded.view(-1,
+                                           CTX_SIZE * EMBED_DIMS) @ hyper_weights
+
+        # batch norm
+        hyper_pre_activate = batchnorm_gains * \
+            (hyper_pre_activate - batchnorm_mean_running) / \
+            (batchnorm_std_running + 1e-100) + batchnorm_biases
+
+        hyper_activations = torch.tanh(hyper_pre_activate)
         logits = hyper_activations @ out_weights + out_biases
         probabilities = get_softmax(logits)
         current_char = int(torch.multinomial(
