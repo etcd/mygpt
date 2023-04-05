@@ -36,7 +36,7 @@ neural_net = torch.randn((alphabet_size, alphabet_size), requires_grad=True)
 losses = []
 for i in range(30):
     # forward pass
-    logits = xenc @ neural_net
+    logits = xenc @ neural_net  # log counts
     next_letter_probabilities = get_softmax(logits)
     loss = -next_letter_probabilities[range(len(ys)), ys].log().mean()
     losses.append(loss.item())
