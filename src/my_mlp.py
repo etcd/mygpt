@@ -68,8 +68,9 @@ for i in range(TRAINING_EPOCHS):
 
     # forward pass
     embedded_batch = embed_weights[batch]  # (batch size, ctx size, embed dims)
-    hyper_activations = torch.tanh(embedded_batch.view(-1, CTX_SIZE*EMBED_DIMS)
-                                   @ hyper_weights + hyper_biases)
+    hyper_pre_activate = embedded_batch.view(
+        -1, CTX_SIZE * EMBED_DIMS) @ hyper_weights + hyper_biases
+    hyper_activations = torch.tanh(hyper_pre_activate)
     logits = hyper_activations @ out_weights + out_biases
     loss = torch.nn.functional.cross_entropy(logits, labels)
     losses.append(loss.item())
@@ -85,6 +86,9 @@ for i in range(TRAINING_EPOCHS):
     for p in params:
         p.data -= LEARNING_RATE * p.grad  # type: ignore
 
+    if i % (TRAINING_EPOCHS//10) == 0:
+        print(f'{i}/{TRAINING_EPOCHS}', losses[-1])
+
 print('Training loss', losses[-1])
 
 # plt.plot(steps, losses)
@@ -92,8 +96,9 @@ print('Training loss', losses[-1])
 
 # dev loss
 embedded_batch = embed_weights[xs_dev]
-hyper_activations = torch.tanh(embedded_batch.view(-1, CTX_SIZE*EMBED_DIMS)
-                               @ hyper_weights + hyper_biases)
+hyper_pre_activate = embedded_batch.view(
+    -1, CTX_SIZE*EMBED_DIMS) @ hyper_weights + hyper_biases
+hyper_activations = torch.tanh(hyper_pre_activate)
 logits = hyper_activations @ out_weights + out_biases
 loss = torch.nn.functional.cross_entropy(logits, ys_dev)
 print('Dev loss', loss.item())
