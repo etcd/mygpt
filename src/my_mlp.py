@@ -48,9 +48,9 @@ ys_train, ys_dev, ys_test = [torch.tensor(l) for l in ys_split]
 
 embed_weights = torch.randn((alphabet_size, EMBED_DIMS))
 hyper_weights = torch.randn(
-    (CTX_SIZE*EMBED_DIMS, HYPER_DIMS)) * (5/3)/(EMBED_DIMS*CTX_SIZE)**.5
+    (CTX_SIZE*EMBED_DIMS, HYPER_DIMS)) * (5/3)/(CTX_SIZE*EMBED_DIMS)**.5
 hyper_biases = torch.randn(HYPER_DIMS) * 0.01
-out_weights = torch.randn((HYPER_DIMS, alphabet_size)) * 0.01
+out_weights = torch.randn((HYPER_DIMS, alphabet_size)) * (5/3)/(HYPER_DIMS)**.5
 out_biases = torch.randn(alphabet_size) * 0.01
 
 params = [embed_weights, hyper_weights, hyper_biases, out_weights, out_biases]
