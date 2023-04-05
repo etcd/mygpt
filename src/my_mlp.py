@@ -4,13 +4,14 @@ from lib.basic_tokenizer import make_tokenizers
 import torch
 
 from lib.list import split_list
+from lib.nn.softmax import get_softmax
 
 
 BLOCK_SIZE: Final[int] = 3
 EMBED_DIMS: Final[int] = 10
 HYPER_DIMS: Final[int] = 200
 MINIBATCH_SIZE: Final[int] = 32
-TRAINING_EPOCHS: Final[int] = 200000
+TRAINING_EPOCHS: Final[int] = 250000
 LEARN_RATE_START: Final[float] = 0.3
 LEARN_RATE_DECAY: Final[float] = 10
 
@@ -91,3 +92,25 @@ hyper_activations = torch.tanh(embedded_batch.view(-1, BLOCK_SIZE*EMBED_DIMS)
 logits = hyper_activations @ out_weights + out_biases
 loss = torch.nn.functional.cross_entropy(logits, ys_dev)
 print('Dev loss', loss.item())
+
+
+def generate_word():
+    encoded_chars = []
+    context = [0] * BLOCK_SIZE
+    while True:
+        embedded = embed_weights[context]
+        hyper_activations = torch.tanh(
+            embedded.view(-1, BLOCK_SIZE*EMBED_DIMS)@hyper_weights + hyper_biases)
+        logits = hyper_activations @ out_weights + out_biases
+        probabilities = get_softmax(logits)
+        current_char = int(torch.multinomial(
+            probabilities, num_samples=1, replacement=True).item())
+        context = context[1:] + [current_char]
+        encoded_chars.append(current_char)
+        if current_char == 0:
+            break
+
+    return decode(encoded_chars)
+
+
+print([generate_word() for _ in range(10)])
