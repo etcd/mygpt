@@ -8,7 +8,7 @@ from lib.nn.softmax import get_softmax
 
 
 BLOCK_SIZE: Final[int] = 3
-EMBED_DIMS: Final[int] = 20
+EMBED_DIMS: Final[int] = 12
 HYPER_DIMS: Final[int] = 200
 MINIBATCH_SIZE: Final[int] = 32
 TRAINING_EPOCHS: Final[int] = 250000
