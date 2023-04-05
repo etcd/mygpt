@@ -53,7 +53,11 @@ hyper_biases = torch.randn(HYPER_DIMS) * 0.01
 out_weights = torch.randn((HYPER_DIMS, alphabet_size)) * (5/3)/(HYPER_DIMS)**.5
 out_biases = torch.randn(alphabet_size) * 0.01
 
-params = [embed_weights, hyper_weights, hyper_biases, out_weights, out_biases]
+batchnorm_gains = torch.randn((1, HYPER_DIMS))
+batchnorm_biases = torch.zeros((1, HYPER_DIMS))
+
+params = [embed_weights, hyper_weights, hyper_biases,
+          out_weights, out_biases, batchnorm_gains, batchnorm_biases]
 
 for p in params:
     p.requires_grad = True
@@ -66,9 +70,10 @@ def evaluate_loss(ins: torch.Tensor, outs: torch.Tensor):
     hyper_pre_activate = embedded.view(
         -1, CTX_SIZE * EMBED_DIMS) @ hyper_weights + hyper_biases
 
-    hyper_pre_activate = (hyper_pre_activate - hyper_pre_activate.mean(0,
-                          keepdim=True)) / hyper_pre_activate.std(0, keepdim=True)
     # batch norm
+    hyper_pre_activate = batchnorm_gains*(hyper_pre_activate - hyper_pre_activate.mean(
+        0,  keepdim=True)) / hyper_pre_activate.std(0, keepdim=True) + batchnorm_biases
+
     hyper_activations = torch.tanh(hyper_pre_activate)
     logits = hyper_activations @ out_weights + out_biases  # log counts
 
