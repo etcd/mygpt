@@ -67,8 +67,7 @@ for i in range(TRAINING_EPOCHS):
     labels = ys_train[idxs]
 
     # forward pass
-    # (alphabet size, ctx_size, embed_dims)
-    embedded_batch = embed_weights[batch]
+    embedded_batch = embed_weights[batch]  # (batch size, ctx size, embed dims)
     hyper_activations = torch.tanh(embedded_batch.view(-1, CTX_SIZE*EMBED_DIMS)
                                    @ hyper_weights + hyper_biases)
     logits = hyper_activations @ out_weights + out_biases
