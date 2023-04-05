@@ -9,11 +9,11 @@ from lib.list import split_list
 from lib.nn.softmax import get_softmax
 
 
-CTX_SIZE: Final[int] = 3
+CTX_SIZE: Final[int] = 4
 EMBED_DIMS: Final[int] = 12
 HYPER_DIMS: Final[int] = 200
-MINIBATCH_SIZE: Final[int] = 32
-TRAINING_EPOCHS: Final[int] = 30000
+MINIBATCH_SIZE: Final[int] = 40
+TRAINING_EPOCHS: Final[int] = 100000
 LEARN_RATE_START: Final[float] = 0.2
 LEARN_RATE_DECAY: Final[float] = 13
 
