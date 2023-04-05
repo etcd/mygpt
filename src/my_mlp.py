@@ -15,7 +15,7 @@ HYPER_DIMS: Final[int] = 200
 MINIBATCH_SIZE: Final[int] = 38
 TRAINING_EPOCHS: Final[int] = 200000
 LEARN_RATE_START: Final[float] = 0.2
-LEARN_RATE_DECAY: Final[float] = 12
+LEARN_RATE_DECAY: Final[float] = 13
 
 
 words = open('sample_data/names.txt', 'r').read().splitlines()
@@ -65,6 +65,10 @@ def evaluate_loss(ins: torch.Tensor, outs: torch.Tensor):
     embedded = embed_weights[ins]  # (ins size, ctx size, embed dims)
     hyper_pre_activate = embedded.view(
         -1, CTX_SIZE * EMBED_DIMS) @ hyper_weights + hyper_biases
+
+    hyper_pre_activate = (hyper_pre_activate - hyper_pre_activate.mean(0,
+                          keepdim=True)) / hyper_pre_activate.std(0, keepdim=True)
+
     hyper_activations = torch.tanh(hyper_pre_activate)
     logits = hyper_activations @ out_weights + out_biases  # log counts
 
