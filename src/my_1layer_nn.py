@@ -33,12 +33,13 @@ xenc = torch.nn.functional.one_hot(
 neural_net = torch.randn((alphabet_size, alphabet_size), requires_grad=True)
 
 # gradient descent
+losses = []
 for i in range(30):
     # forward pass
     logits = xenc @ neural_net
     next_letter_probabilities = get_softmax(logits)
     loss = -next_letter_probabilities[range(len(ys)), ys].log().mean()
-    # print(loss.item())
+    losses.append(loss.item())
 
     # backward pass
     neural_net.grad = None
@@ -46,6 +47,8 @@ for i in range(30):
 
     # update weights
     neural_net.data += -50 * neural_net.grad  # type: ignore
+
+print("Loss", losses[-1])
 
 for _ in range(5):
     print(generate_word(neural_net, decode, alphabet_size))
