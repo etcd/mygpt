@@ -47,10 +47,10 @@ xs_train, xs_dev, xs_test = [torch.tensor(l) for l in xs_split]
 ys_train, ys_dev, ys_test = [torch.tensor(l) for l in ys_split]
 
 embed_weights = torch.randn((alphabet_size, EMBED_DIMS))
-hyper_weights = torch.randn((CTX_SIZE*EMBED_DIMS, HYPER_DIMS))
-hyper_biases = torch.randn(HYPER_DIMS)
+hyper_weights = torch.randn((CTX_SIZE*EMBED_DIMS, HYPER_DIMS)) * 0.01
+hyper_biases = torch.randn(HYPER_DIMS) * 0.01
 out_weights = torch.randn((HYPER_DIMS, alphabet_size)) * 0.01
-out_biases = torch.zeros(alphabet_size)
+out_biases = torch.randn(alphabet_size) * 0.01
 
 params = [embed_weights, hyper_weights, hyper_biases, out_weights, out_biases]
 
@@ -66,6 +66,12 @@ def evaluate_loss(ins: torch.Tensor, outs: torch.Tensor):
         -1, CTX_SIZE * EMBED_DIMS) @ hyper_weights + hyper_biases
     hyper_activations = torch.tanh(hyper_pre_activate)
     logits = hyper_activations @ out_weights + out_biases  # log counts
+
+    # plt.figure(figsize=(20, 10))
+    # plt.imshow(hyper_activations.abs() > 0.99,  # type: ignore
+    #            cmap='gray', interpolation='nearest')
+    # plt.show()
+
     return torch.nn.functional.cross_entropy(logits, outs)
 
 
