@@ -12,7 +12,7 @@ from lib.nn.softmax import get_softmax
 BLOCK_SIZE: Final[int] = 3
 EMBED_DIMS: Final[int] = 12
 HYPER_DIMS: Final[int] = 200
-MINIBATCH_SIZE: Final[int] = 32
+MINIBATCH_SIZE: Final[int] = 38
 TRAINING_EPOCHS: Final[int] = 250000
 LEARN_RATE_START: Final[float] = 0.2
 LEARN_RATE_DECAY: Final[float] = 10
@@ -46,10 +46,8 @@ xs_train, xs_dev, xs_test = [torch.tensor(l) for l in xs_split]
 ys_train, ys_dev, ys_test = [torch.tensor(l) for l in ys_split]
 
 embed_weights = torch.randn((alphabet_size, EMBED_DIMS))
-
 hyper_weights = torch.randn((BLOCK_SIZE*EMBED_DIMS, HYPER_DIMS))
 hyper_biases = torch.randn(HYPER_DIMS)
-
 out_weights = torch.randn((HYPER_DIMS, alphabet_size))
 out_biases = torch.randn(alphabet_size)
 
