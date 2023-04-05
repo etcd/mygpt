@@ -1,3 +1,4 @@
+import random
 from typing import Final
 from lib.basic_tokenizer import make_tokenizers
 import torch
@@ -5,14 +6,18 @@ import torch
 from lib.list import split_list
 
 
-BLOCK_SIZE: Final[int] = 4
+BLOCK_SIZE: Final[int] = 3
 EMBED_DIMS: Final[int] = 10
-HYPER_DIMS: Final[int] = 100
+HYPER_DIMS: Final[int] = 200
 MINIBATCH_SIZE: Final[int] = 32
-TRAINING_EPOCHS: Final[int] = 50000
-LEARNING_RATE: Final[float] = 0.1
+TRAINING_EPOCHS: Final[int] = 200000
+LEARN_RATE_START: Final[float] = 0.3
+LEARN_RATE_DECAY: Final[float] = 10
 
 words = open('sample_data/names.txt', 'r').read().splitlines()
+random.seed(1234)
+random.shuffle(words)
+
 alphabet = ['.'] + sorted(list(set(''.join(words))))
 alphabet_size = len(alphabet)
 (encode, decode) = make_tokenizers(alphabet)
@@ -74,6 +79,8 @@ for i in range(TRAINING_EPOCHS):
     loss.backward()
 
     # update
+    LEARNING_RATE = (LEARN_RATE_START * LEARN_RATE_DECAY **
+                     (-i/TRAINING_EPOCHS))
     for p in params:
         p.data -= LEARNING_RATE * p.grad  # type: ignore
 
