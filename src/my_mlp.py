@@ -87,7 +87,7 @@ for i in range(TRAINING_EPOCHS):
         p.data -= LEARNING_RATE * p.grad  # type: ignore
 
     if i % (TRAINING_EPOCHS//10) == 0:
-        print(f'{i}/{TRAINING_EPOCHS}', losses[-1])
+        print(f'{i}/{TRAINING_EPOCHS}', loss.item())
 
 print('Training loss', losses[-1])
 
