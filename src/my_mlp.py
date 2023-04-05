@@ -15,7 +15,8 @@ HYPER_DIMS: Final[int] = 200
 MINIBATCH_SIZE: Final[int] = 38
 TRAINING_EPOCHS: Final[int] = 250000
 LEARN_RATE_START: Final[float] = 0.2
-LEARN_RATE_DECAY: Final[float] = 10
+LEARN_RATE_DECAY: Final[float] = 12
+
 
 words = open('sample_data/names.txt', 'r').read().splitlines()
 random.seed(1234)
@@ -58,21 +59,24 @@ for p in params:
 
 print("Param count", sum(p.nelement() for p in params))
 
+
+def evaluate_loss(ins: torch.Tensor, outs: torch.Tensor):
+    embedded = embed_weights[ins]  # (ins size, ctx size, embed dims)
+    hyper_pre_activate = embedded.view(
+        -1, CTX_SIZE * EMBED_DIMS) @ hyper_weights + hyper_biases
+    hyper_activations = torch.tanh(hyper_pre_activate)
+    logits = hyper_activations @ out_weights + out_biases
+    return torch.nn.functional.cross_entropy(logits, outs)
+
+
 losses = []
 steps = range(TRAINING_EPOCHS)
 for i in range(TRAINING_EPOCHS):
     # minibatch
     idxs = torch.randint(0, xs_train.shape[0], (MINIBATCH_SIZE,))
-    batch = xs_train[idxs]
-    labels = ys_train[idxs]
 
     # forward pass
-    embedded_batch = embed_weights[batch]  # (batch size, ctx size, embed dims)
-    hyper_pre_activate = embedded_batch.view(
-        -1, CTX_SIZE * EMBED_DIMS) @ hyper_weights + hyper_biases
-    hyper_activations = torch.tanh(hyper_pre_activate)
-    logits = hyper_activations @ out_weights + out_biases
-    loss = torch.nn.functional.cross_entropy(logits, labels)
+    loss = evaluate_loss(xs_train[idxs], ys_train[idxs])
     losses.append(loss.item())
 
     # backward pass
@@ -91,16 +95,11 @@ for i in range(TRAINING_EPOCHS):
 
 print('Training loss', losses[-1])
 
-# plt.plot(steps, losses)
-# plt.show()
+plt.plot(steps, losses)
+plt.show()
 
 # dev loss
-embedded_batch = embed_weights[xs_dev]
-hyper_pre_activate = embedded_batch.view(
-    -1, CTX_SIZE*EMBED_DIMS) @ hyper_weights + hyper_biases
-hyper_activations = torch.tanh(hyper_pre_activate)
-logits = hyper_activations @ out_weights + out_biases
-loss = torch.nn.functional.cross_entropy(logits, ys_dev)
+loss = evaluate_loss(xs_dev, ys_dev)
 print('Dev loss', loss.item())
 
 
