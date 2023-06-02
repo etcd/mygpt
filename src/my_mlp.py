@@ -32,10 +32,10 @@ def make_samples(encoded_words: list[list[int]]):
     xs, ys = [], []
     for encoded_word in encoded_words:
         context = [0] * CTX_SIZE
-        for c_enc in encoded_word:
+        for encoded_char in encoded_word:
             xs.append(context)
-            ys.append(c_enc)
-            context = context[1:] + [c_enc]
+            ys.append(encoded_char)
+            context = context[1:] + [encoded_char]
 
     return xs, ys
 
