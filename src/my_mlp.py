@@ -10,6 +10,7 @@ from lib.nn.softmax import get_softmax
 
 
 CTX_SIZE: Final[int] = 4
+# EMBED_DIMS should be smaller than alphabet size to make sense
 EMBED_DIMS: Final[int] = 12
 HYPER_DIMS: Final[int] = 200
 MINIBATCH_SIZE: Final[int] = 40
@@ -40,6 +41,7 @@ def make_samples(encoded_words: list[list[int]]):
     return xs, ys
 
 
+# xs_list is a list of (lists with length CTX_SIZE)
 xs_list, ys_list = make_samples(encoded_words)
 xs_split = split_list(xs_list, [0.8, 0.1, 0.1])  # train, dev, test
 ys_split = split_list(ys_list, [0.8, 0.1, 0.1])  # train, dev, test
@@ -65,7 +67,10 @@ print("Param count", sum(p.nelement() for p in params))
 
 
 def evaluate_loss(ins: torch.Tensor, outs: torch.Tensor):
-    embedded = embed_weights[ins]  # (ins size, ctx size, embed dims)
+    # embed training inputs of batch
+    # ins is of dimensions (batch size, ctx size)
+    # embedded is of dimensions (batch size, ctx size, embed dims)
+    embedded = embed_weights[ins]
     hyper_pre_activate = embedded.view(
         -1, CTX_SIZE * EMBED_DIMS) @ hyper_weights
 
