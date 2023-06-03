@@ -9,7 +9,7 @@ from lib.list import split_list
 from lib.nn.softmax import get_softmax
 
 
-CTX_SIZE: Final[int] = 4
+CTX_SIZE: Final[int] = 5
 # EMBED_DIMS should be smaller than alphabet size to make sense
 EMBED_DIMS: Final[int] = 12
 HYPER_DIMS: Final[int] = 200
@@ -76,11 +76,11 @@ def evaluate_loss(ins: torch.Tensor, outs: torch.Tensor):
     hyper_pre_activate = embedded_resized @ hyper_weights
 
     # batch norm
-    batchnorm_mean = hyper_pre_activate.mean(0,  keepdim=True)
-    batchnorm_std = hyper_pre_activate.std(0, keepdim=True)
+    batch_mean = hyper_pre_activate.mean(0,  keepdim=True)
+    batch_std = hyper_pre_activate.std(0, keepdim=True)
     hyper_pre_activate = batchnorm_gains * \
-        (hyper_pre_activate - batchnorm_mean) / \
-        (batchnorm_std + 1e-100) + batchnorm_biases
+        (hyper_pre_activate - batch_mean) / \
+        (batch_std + 1e-100) + batchnorm_biases
 
     hyper_activations = torch.tanh(hyper_pre_activate)
     logits = hyper_activations @ out_weights + out_biases  # log counts
@@ -90,7 +90,7 @@ def evaluate_loss(ins: torch.Tensor, outs: torch.Tensor):
     #            cmap='gray', interpolation='nearest')
     # plt.show()
 
-    return torch.nn.functional.cross_entropy(logits, outs), batchnorm_mean, batchnorm_std
+    return torch.nn.functional.cross_entropy(logits, outs), batch_mean, batch_std
 
 
 losses = []
