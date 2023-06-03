@@ -71,8 +71,9 @@ def evaluate_loss(ins: torch.Tensor, outs: torch.Tensor):
     # ins is of dimensions (batch size, ctx size)
     # embedded is of dimensions (batch size, ctx size, embed dims)
     embedded = embed_weights[ins]
-    hyper_pre_activate = embedded.view(
-        -1, CTX_SIZE * EMBED_DIMS) @ hyper_weights
+    embedded_resized = embedded.view(-1, CTX_SIZE * EMBED_DIMS)
+    # resize to (batch size, ctx size * embed dims)
+    hyper_pre_activate = embedded_resized @ hyper_weights
 
     # batch norm
     batchnorm_mean = hyper_pre_activate.mean(0,  keepdim=True)
