@@ -25,14 +25,14 @@ LEARN_RATE_START: Final[float] = 0.2
 LEARN_RATE_DECAY: Final[float] = 13
 
 
-words = open('sample_data/names.txt', 'r').read().splitlines()
+WORDS = open('sample_data/names.txt', 'r').read().splitlines()
 random.seed(1234)
-random.shuffle(words)
+random.shuffle(WORDS)
 
-alphabet = ['.'] + sorted(list(set(''.join(words))))
-alphabet_size = len(alphabet)
-(encode, decode) = make_tokenizers(alphabet)
-encoded_words = [encode(word + '.') for word in words]
+ALPHABET = ['.'] + sorted(list(set(''.join(WORDS))))
+ALPHABET_SIZE = len(ALPHABET)
+(encode, decode) = make_tokenizers(ALPHABET)
+ENCODED_WORDS = [encode(word + '.') for word in WORDS]
 
 
 def make_samples(encoded_words: list[list[int]], context_size):
@@ -54,21 +54,20 @@ def make_splits(list, split_sizes):
 
 
 # xs_list is a list of (lists with length CTX_SIZE)
-xs_list, ys_list = make_samples(encoded_words, CTX_SIZE)
+xs_list, ys_list = make_samples(ENCODED_WORDS, CTX_SIZE)
 xs_train, xs_dev, xs_test = make_splits(xs_list, [0.8, 0.1, 0.1])
 ys_train, ys_dev, ys_test = make_splits(ys_list, [0.8, 0.1, 0.1])
 
 
 model = Sequential([
-    Embedding(alphabet_size, EMBED_DIMS),
+    Embedding(ALPHABET_SIZE, EMBED_DIMS),
     FlattenConsecutive(CTX_SIZE), Linear(CTX_SIZE * EMBED_DIMS, HYPER_DIMS,
                                          bias=False), BatchNorm1d(HYPER_DIMS), Tanh(),
-    Linear(HYPER_DIMS, alphabet_size),
+    Linear(HYPER_DIMS, ALPHABET_SIZE),
 ])
-
-
 parameters = model.parameters()
-print("Param count", sum(p.nelement() for p in parameters))
+
+print("Parameter count", sum(p.nelement() for p in parameters))
 
 for p in parameters:
     p.requires_grad = True
@@ -79,10 +78,8 @@ def train(xs_train, ys_train):
     for i in range(TRAINING_EPOCHS):
         # minibatch
         idxs = torch.randint(0, xs_train.shape[0], (MINIBATCH_SIZE,))
-
         # forward pass
         logits = model(xs_train[idxs])
-
         loss = torch.nn.functional.cross_entropy(logits, ys_train[idxs])
         losses.append(loss.item())
 
@@ -96,7 +93,6 @@ def train(xs_train, ys_train):
                          (-i/TRAINING_EPOCHS))
         for p in parameters:
             p.data -= LEARNING_RATE * p.grad  # type: ignore
-
         if i % (TRAINING_EPOCHS//10) == 0:
             print(f'{i}/{TRAINING_EPOCHS}', loss.item())
 
@@ -113,9 +109,9 @@ def evaluate_loss(xs, ys):
     return loss
 
 
-def generate_word():
+def generate_word(model, decode, context_size):
     encoded_chars = []
-    context = [0] * CTX_SIZE
+    context = [0] * context_size
     while True:
         logits = model(torch.tensor([context]))
         probabilities = get_softmax(logits, dim=1)
@@ -139,4 +135,4 @@ for layer in model.layers:
 dev_loss = evaluate_loss(xs_dev, ys_dev)
 print('Dev loss', dev_loss.item())
 
-print([generate_word() for _ in range(10)])
+print([generate_word(model, decode, CTX_SIZE) for _ in range(10)])
