@@ -29,10 +29,10 @@ alphabet_size = len(alphabet)
 encoded_words = [encode(word + '.') for word in words]
 
 
-def make_samples(encoded_words: list[list[int]]):
+def make_samples(encoded_words: list[list[int]], context_size):
     xs, ys = [], []
     for encoded_word in encoded_words:
-        context = [0] * CTX_SIZE
+        context = [0] * context_size
         for encoded_char in encoded_word:
             xs.append(context)
             ys.append(encoded_char)
@@ -41,12 +41,16 @@ def make_samples(encoded_words: list[list[int]]):
     return xs, ys
 
 
+def make_splits(list, split_sizes):
+    splits = split_list(list, split_sizes)
+    train, dev, test = [torch.tensor(split) for split in splits]
+    return train, dev, test
+
+
 # xs_list is a list of (lists with length CTX_SIZE)
-xs_list, ys_list = make_samples(encoded_words)
-xs_split = split_list(xs_list, [0.8, 0.1, 0.1])  # train, dev, test
-ys_split = split_list(ys_list, [0.8, 0.1, 0.1])  # train, dev, test
-xs_train, xs_dev, xs_test = [torch.tensor(l) for l in xs_split]
-ys_train, ys_dev, ys_test = [torch.tensor(l) for l in ys_split]
+xs_list, ys_list = make_samples(encoded_words, CTX_SIZE)
+xs_train, xs_dev, xs_test = make_splits(xs_list, [0.8, 0.1, 0.1])
+ys_train, ys_dev, ys_test = make_splits(ys_list, [0.8, 0.1, 0.1])
 
 embed_weights = torch.randn((alphabet_size, EMBED_DIMS))
 hyper_weights = torch.randn(
