@@ -63,6 +63,7 @@ model = Sequential([
     Embedding(ALPHABET_SIZE, EMBED_DIMS),
     FlattenConsecutive(CTX_SIZE), Linear(CTX_SIZE * EMBED_DIMS, HYPER_DIMS,
                                          bias=False), BatchNorm1d(HYPER_DIMS), Tanh(),
+    Linear(HYPER_DIMS, HYPER_DIMS, bias=False), BatchNorm1d(HYPER_DIMS), Tanh(),
     Linear(HYPER_DIMS, ALPHABET_SIZE),
 ])
 parameters = model.parameters()
