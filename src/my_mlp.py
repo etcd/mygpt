@@ -102,7 +102,7 @@ def train(xs_train, ys_train):
 
     print('Training loss', losses[-1])
 
-    plt.plot(range(TRAINING_EPOCHS), losses)
+    plt.plot(torch.tensor(losses).view(-1, 1000).mean(1))
     plt.show()
 
 
