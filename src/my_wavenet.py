@@ -16,11 +16,11 @@ from lib.nn.softmax import get_softmax
 
 
 CTX_SIZE: Final[int] = 8  # must be 2**number of hidden layers
-# EMBED_DIMS should be smaller than alphabet size to make sense
+# EMBED_DIMS should be < alphabet size, otherwise just don't embed
 EMBED_DIMS: Final[int] = 24
 HYPER_DIMS: Final[int] = 128
 MINIBATCH_SIZE: Final[int] = 40
-TRAINING_EPOCHS: Final[int] = 200000
+TRAINING_EPOCHS: Final[int] = 100000
 LEARN_RATE_START: Final[float] = 0.2
 LEARN_RATE_DECAY: Final[float] = 13
 
