@@ -93,48 +93,51 @@ def evaluate_loss(ins: torch.Tensor, outs: torch.Tensor):
     return torch.nn.functional.cross_entropy(logits, outs), batch_mean, batch_std
 
 
-losses = []
-steps = range(TRAINING_EPOCHS)
-batchnorm_mean_running = torch.zeros((1, HYPER_DIMS))
-batchnorm_std_running = torch.ones((1, HYPER_DIMS))
-for i in range(TRAINING_EPOCHS):
-    # minibatch
-    idxs = torch.randint(0, xs_train.shape[0], (MINIBATCH_SIZE,))
+def train():
+    losses = []
+    steps = range(TRAINING_EPOCHS)
+    batchnorm_mean_running = torch.zeros((1, HYPER_DIMS))
+    batchnorm_std_running = torch.ones((1, HYPER_DIMS))
+    for i in range(TRAINING_EPOCHS):
+        # minibatch
+        idxs = torch.randint(0, xs_train.shape[0], (MINIBATCH_SIZE,))
 
-    # forward pass
-    loss, batchnorm_mean_i, batchnorm_std_i = evaluate_loss(
-        xs_train[idxs], ys_train[idxs])
-    losses.append(loss.item())
+        # forward pass
+        loss, batchnorm_mean_i, batchnorm_std_i = evaluate_loss(
+            xs_train[idxs], ys_train[idxs])
+        losses.append(loss.item())
 
-    with torch.no_grad():
-        batchnorm_mean_running = .999*batchnorm_mean_running+0.001*batchnorm_mean_i
-        batchnorm_std_running = .999*batchnorm_std_running+0.001*batchnorm_std_i
+        with torch.no_grad():
+            batchnorm_mean_running = .999*batchnorm_mean_running+0.001*batchnorm_mean_i
+            batchnorm_std_running = .999*batchnorm_std_running+0.001*batchnorm_std_i
 
-    # backward pass
-    for p in params:
-        p.grad = None
-    loss.backward()
+        # backward pass
+        for p in params:
+            p.grad = None
+        loss.backward()
 
-    # update
-    LEARNING_RATE = (LEARN_RATE_START * LEARN_RATE_DECAY **
-                     (-i/TRAINING_EPOCHS))
-    for p in params:
-        p.data -= LEARNING_RATE * p.grad  # type: ignore
+        # update
+        LEARNING_RATE = (LEARN_RATE_START * LEARN_RATE_DECAY **
+                         (-i/TRAINING_EPOCHS))
+        for p in params:
+            p.data -= LEARNING_RATE * p.grad  # type: ignore
 
-    if i % (TRAINING_EPOCHS//10) == 0:
-        print(f'{i}/{TRAINING_EPOCHS}', loss.item())
+        if i % (TRAINING_EPOCHS//10) == 0:
+            print(f'{i}/{TRAINING_EPOCHS}', loss.item())
 
-print('Training loss', losses[-1])
+    print('Training loss', losses[-1])
 
-plt.plot(steps, losses)
-plt.show()
+    plt.plot(steps, losses)
+    plt.show()
 
-# dev loss
-loss, _, _ = evaluate_loss(xs_dev, ys_dev)
-print('Dev loss', loss.item())
+    # dev loss
+    loss, _, _ = evaluate_loss(xs_dev, ys_dev)
+    print('Dev loss', loss.item())
+
+    return batchnorm_mean_running, batchnorm_std_running
 
 
-def generate_word():
+def generate_word(batchnorm_mean, batchnorm_std):
     encoded_chars = []
     context = [0] * CTX_SIZE
     while True:
@@ -144,8 +147,8 @@ def generate_word():
 
         # batch norm
         hyper_pre_activate = batchnorm_gains * \
-            (hyper_pre_activate - batchnorm_mean_running) / \
-            (batchnorm_std_running + 1e-100) + batchnorm_biases
+            (hyper_pre_activate - batchnorm_mean) / \
+            (batchnorm_std + 1e-100) + batchnorm_biases
 
         hyper_activations = torch.tanh(hyper_pre_activate)
         logits = hyper_activations @ out_weights + out_biases
@@ -160,4 +163,6 @@ def generate_word():
     return decode(encoded_chars)
 
 
-print([generate_word() for _ in range(10)])
+batchnorm_mean, batchnorm_std = train()
+
+print([generate_word(batchnorm_mean, batchnorm_std) for _ in range(10)])
