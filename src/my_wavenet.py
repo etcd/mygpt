@@ -24,8 +24,8 @@ TRAINING_EPOCHS: Final[int] = 100000
 LEARN_RATE_START: Final[float] = 0.2
 LEARN_RATE_DECAY: Final[float] = 13
 
-
-WORDS = open('sample_data/names.txt', 'r').read().splitlines()
+TEXT = open('sample_data/names.txt', 'r').read()
+WORDS = TEXT.splitlines()
 random.seed(1234)
 random.shuffle(WORDS)
 
@@ -47,16 +47,10 @@ def make_samples(encoded_words: list[list[int]], context_size):
     return xs, ys
 
 
-def make_splits(list, split_sizes):
-    splits = split_list(list, split_sizes)
-    train, dev, test = [torch.tensor(split) for split in splits]
-    return train, dev, test
-
-
-# xs_list is a list of (lists with length CTX_SIZE)
-xs_list, ys_list = make_samples(ENCODED_WORDS, CTX_SIZE)
-xs_train, xs_dev, xs_test = make_splits(xs_list, [0.8, 0.1, 0.1])
-ys_train, ys_dev, ys_test = make_splits(ys_list, [0.8, 0.1, 0.1])
+train_words, dev_words, test_words = split_list(ENCODED_WORDS, [0.8, 0.1, 0.1])
+xs_train, ys_train = map(torch.tensor, make_samples(train_words, CTX_SIZE))
+xs_dev, ys_dev = map(torch.tensor, make_samples(dev_words, CTX_SIZE))
+xs_test, ys_test = map(torch.tensor, make_samples(test_words, CTX_SIZE))
 
 
 model = Sequential([
