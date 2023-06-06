@@ -2,11 +2,11 @@
 import torch
 
 from lib.basic_tokenizer import make_tokenizers
+from lib.list import split_list
 
 
-def split_list(list, fraction):
-    n = int(len(list) * fraction)
-    return [list[:n], list[n:]]
+BLOCK_SIZE = 8
+BATCH_SIZE = 4
 
 
 def get_batch(data, block_size, batch_size):
@@ -18,21 +18,18 @@ def get_batch(data, block_size, batch_size):
     return blocks, targetss
 
 
-with open("sample_data/tinyshakespeare.txt", "r", encoding="utf-8") as f:
-    text = f.read()
-alphabet = sorted(list(set(text)))
-[encode, decode] = make_tokenizers(alphabet)
+TEXT = open('sample_data/tinyshakespeare.txt', 'r').read()
+ALPHABET = sorted(list(set(TEXT)))
+(encode, decode) = make_tokenizers(ALPHABET)
 
-data = torch.tensor(encode(text), dtype=torch.long)
-[train_data, validate_data] = split_list(data, 0.9)
+DATA = torch.tensor(encode(TEXT), dtype=torch.long)
+[train_data, validate_data] = split_list(DATA, [0.9, 0.1])
 
-block_size = 8
-batch_size = 4
 
-blocks, targetss = get_batch(train_data, block_size, batch_size)
+blocks, targetss = get_batch(train_data, BLOCK_SIZE, BATCH_SIZE)
 
 token_embedding_table = torch.nn.Embedding(
-    len(alphabet), len(alphabet))  # batch, time, channels (vocab size)
+    len(ALPHABET), len(ALPHABET))  # batch, time, channels (vocab size)
 
 
 def forward(token_embedding_table, blocks, targetss=None):
@@ -41,7 +38,7 @@ def forward(token_embedding_table, blocks, targetss=None):
         loss = None
     else:
         loss = torch.nn.functional.cross_entropy(
-            logits.view(-1, len(alphabet)), targetss.view(-1))
+            logits.view(-1, len(ALPHABET)), targetss.view(-1))
     return logits, loss
 
 
