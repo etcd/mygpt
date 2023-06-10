@@ -21,7 +21,8 @@ torch.manual_seed(1234)
 BLOCK_SIZE = 32  # max context length for predictions
 BATCH_SIZE = 4  # number of sequences to process in parallel
 EMBED_DIMS = 32  # embedding dimensions
-TRAINING_STEPS = 1000
+TRAINING_STEPS = 5000
+LEARNING_RATE = 1e-3
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
@@ -113,7 +114,7 @@ model = LanguageModel(len(ALPHABET), EMBED_DIMS)
 model = model.to(DEVICE)
 
 
-optimizer = torch.optim.AdamW(model.parameters(), lr=0.001)
+optimizer = torch.optim.AdamW(model.parameters(), lr=LEARNING_RATE)
 
 for steps in range(TRAINING_STEPS):
     xs, ys = get_batch(train_data, BLOCK_SIZE, BATCH_SIZE)
