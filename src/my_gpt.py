@@ -18,7 +18,7 @@ E = Embedding dimensions
 
 torch.manual_seed(1234)
 
-BLOCK_SIZE = 128  # max context length for predictions
+BLOCK_SIZE = 32  # max context length for predictions
 BATCH_SIZE = 4  # number of sequences to process in parallel
 EMBED_DIMS = 32  # embedding dimensions
 TRAINING_STEPS = 1000
@@ -53,9 +53,11 @@ class LanguageModel(nn.Module):
     def generate(self, context, max_new_tokens):
         # context is (B, T)
         for _ in range(max_new_tokens):
-            token_embeddings = self.token_embedding_table(context)  # (B, T, E)
+            context_crop = context[:, -BLOCK_SIZE:]  # (B, T)
+            token_embeddings = self.token_embedding_table(
+                context_crop)  # (B, T, E)
             position_embeddings = self.position_embedding_table(
-                torch.arange(context.shape[1], device=DEVICE))  # (T, E)
+                torch.arange(context_crop.shape[1], device=DEVICE))  # (T, E)
             x = token_embeddings + position_embeddings  # (B, T, E)
             logits = self.lm_head(x)  # (B, T, V)
             logits = logits[:, -1, :]  # get last time step; (B, V)
@@ -123,4 +125,4 @@ for steps in range(TRAINING_STEPS):
 print(loss.item())
 
 context = torch.zeros((1, 1), dtype=torch.long, device=DEVICE)
-print(decode(model.generate(context, max_new_tokens=BLOCK_SIZE)[0].tolist()))
+print(decode(model.generate(context, max_new_tokens=100)[0].tolist()))
