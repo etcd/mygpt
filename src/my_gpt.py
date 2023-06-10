@@ -6,7 +6,7 @@ import torch.nn as nn
 from lib.basic_tokenizer import make_tokenizers
 from lib.list import split_list
 from lib.nn.layers.FeedForward import FeedForward
-from lib.nn.layers.Head import MultiHeadAttention
+from lib.nn.layers.Head import Head, MultiHeadAttention
 
 '''
 B = Batch
@@ -33,6 +33,7 @@ class LanguageModel(nn.Module):
             vocab_size, embed_dims)  # (V, E)
         self.position_embedding_table = nn.Embedding(
             BLOCK_SIZE, embed_dims)  # (T, E)
+        self.sa_head = Head(embed_dims, BLOCK_SIZE, embed_dims)
         self.lm_head = nn.Linear(embed_dims, vocab_size)
 
     def forward(self, context, targets=None):
@@ -41,6 +42,7 @@ class LanguageModel(nn.Module):
         position_embeddings = self.position_embedding_table(
             torch.arange(context.shape[1], device=DEVICE))  # (T, E)
         x = token_embeddings + position_embeddings  # (B, T, E)
+        x = self.sa_head(x)  # apply one head of self attention (B, T, E)
         logits = self.lm_head(x)  # (B, T, V)
 
         if targets is None:

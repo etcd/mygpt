@@ -15,13 +15,13 @@ class Head(nn.Module):
 
     def forward(self, x):
         B, T, C = x.shape
-        key = self.key(x)  # (B, T, C)
-        query = self.query(x)  # (B, T, C)
+        keys = self.key(x)  # (B, T, C)
+        queries = self.query(x)  # (B, T, C)
 
         # compute attention scores / affinities
 
         # (B, T, C) @ (B, C, T) -> (B, T, T)
-        weights = query @ key.transpose(-2, -1) * C**-0.5
+        weights = queries @ keys.transpose(-2, -1) * C**-0.5
         weights = weights.masked_fill(
             self.tril[:T, :T] == 0, float('-inf'))  # (B, T, T)
         weights = torch.nn.functional.softmax(weights, dim=-1)  # (B, T, T)
