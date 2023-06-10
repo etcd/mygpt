@@ -1,21 +1,100 @@
 
+import random
 import torch
+import torch.nn as nn
 
 from lib.basic_tokenizer import make_tokenizers
 from lib.list import split_list
+from lib.nn.layers.FeedForward import FeedForward
+from lib.nn.layers.Head import MultiHeadAttention
+
+'''
+B = Batch
+T = Time
+V = Vocabulary size (alphabet size)
+E = Embedding dimensions
+'''
 
 
-BLOCK_SIZE = 8
-BATCH_SIZE = 4
+torch.manual_seed(1234)
+
+BLOCK_SIZE = 128  # max context length for predictions
+BATCH_SIZE = 4  # number of sequences to process in parallel
+EMBED_DIMS = 32  # embedding dimensions
+TRAINING_STEPS = 1000
+DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+
+class LanguageModel(nn.Module):
+    def __init__(self, vocab_size, embed_dims):
+        super().__init__()
+        self.token_embedding_table = nn.Embedding(
+            vocab_size, embed_dims)  # (V, E)
+        self.position_embedding_table = nn.Embedding(
+            BLOCK_SIZE, embed_dims)  # (T, E)
+        self.lm_head = nn.Linear(embed_dims, vocab_size)
+
+    def forward(self, context, targets=None):
+        # context is (B, T)
+        token_embeddings = self.token_embedding_table(context)  # (B, T, E)
+        position_embeddings = self.position_embedding_table(
+            torch.arange(context.shape[1], device=DEVICE))  # (T, E)
+        x = token_embeddings + position_embeddings  # (B, T, E)
+        logits = self.lm_head(x)  # (B, T, V)
+
+        if targets is None:
+            loss = None
+        else:
+            B, T, C = logits.shape
+            loss = nn.functional.cross_entropy(
+                logits.view(B*T, C), targets.reshape(B*T))
+        return logits, loss
+
+    def generate(self, context, max_new_tokens):
+        # context is (B, T)
+        for _ in range(max_new_tokens):
+            token_embeddings = self.token_embedding_table(context)  # (B, T, E)
+            position_embeddings = self.position_embedding_table(
+                torch.arange(context.shape[1], device=DEVICE))  # (T, E)
+            x = token_embeddings + position_embeddings  # (B, T, E)
+            logits = self.lm_head(x)  # (B, T, V)
+            logits = logits[:, -1, :]  # get last time step; (B, V)
+            probabilities = torch.nn.functional.softmax(
+                logits, dim=-1)  # (B, V)
+            context_next = torch.multinomial(
+                probabilities, num_samples=1)  # (B, 1)
+            context = torch.cat([context, context_next], dim=1)  # (B, T+1)
+        return context
+
+
+def make_sample(data, index, block_size):
+    '''Makes a single training _sample_, which has a time dimension.
+
+       For some time `t`, we have a sub-sample, where:
+            training input: xs[0, t+1]
+            training target: ys[t]
+    '''
+    xs = data[index:index+block_size]
+    ys = data[index+1:block_size+index+1]
+    return xs, ys
 
 
 def get_batch(data, block_size, batch_size):
-    '''Gets a random batch of blocks from data.
+    '''Gets a random _batch_ of _samples_ from data.
     '''
-    idx = torch.randint(len(data)-block_size, (batch_size,))
-    blocks = torch.stack([data[i:i+block_size] for i in idx])
-    targetss = torch.stack([data[i+1:i+block_size+1] for i in idx])
-    return blocks, targetss
+
+    # get `batch_size` number of random indices (from 0 to `len(data)-block_size`)
+    indices = [random.randint(0, len(data)-block_size)
+               for _ in range(batch_size)]
+
+    # make samples from data at those indices, turn into tensors, split into xs and ys
+    xs, ys = torch.split(torch.stack(
+        [torch.stack(make_sample(data, i, block_size)) for i in indices]), 1, dim=1)
+
+    xs = xs.squeeze(1).to(DEVICE)
+    ys = ys.squeeze(1).to(DEVICE)
+
+    return xs, ys
 
 
 TEXT = open('sample_data/tinyshakespeare.txt', 'r').read()
@@ -23,44 +102,25 @@ ALPHABET = sorted(list(set(TEXT)))
 (encode, decode) = make_tokenizers(ALPHABET)
 
 DATA = torch.tensor(encode(TEXT), dtype=torch.long)
-[train_data, validate_data] = split_list(DATA, [0.9, 0.1])
+train_data, validate_data = split_list(DATA, [0.9, 0.1])
 
 
-blocks, targetss = get_batch(train_data, BLOCK_SIZE, BATCH_SIZE)
+xs, ys = get_batch(train_data, BLOCK_SIZE, BATCH_SIZE)
 
-token_embedding_table = torch.nn.Embedding(
-    len(ALPHABET), len(ALPHABET))  # batch, time, channels (vocab size)
-
-
-def forward(token_embedding_table, blocks, targetss=None):
-    logits = token_embedding_table(blocks)
-    if targetss is None:
-        loss = None
-    else:
-        loss = torch.nn.functional.cross_entropy(
-            logits.view(-1, len(ALPHABET)), targetss.view(-1))
-    return logits, loss
+model = LanguageModel(len(ALPHABET), EMBED_DIMS)
+model = model.to(DEVICE)
 
 
-def generate(idx, targetss, max_new_tokens):
-    # idx is (B, T) array of indices in current block
-    for _ in range(max_new_tokens):
-        # get predictions
-        logits, loss = forward(token_embedding_table, idx, targetss)
-        # get last token
-        logits = logits[:, -1, :]  # (B, C)
-        # apply softmax to get probabilities
-        probabilities = torch.nn.functional.softmax(logits, dim=1)  # (B, C)
-        # sample from probabilities
-        idx_next = torch.multinomial(probabilities, num_samples=1)  # (B, 1)
-        # append to idx
-        idx = torch.cat([idx, idx_next], dim=1)  # (B, T+1)
-    return idx
+optimizer = torch.optim.AdamW(model.parameters(), lr=0.001)
 
+for steps in range(TRAINING_STEPS):
+    xs, ys = get_batch(train_data, BLOCK_SIZE, BATCH_SIZE)
+    logits, loss = model(xs, ys)
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
 
-logits, loss = forward(token_embedding_table, blocks, targetss)
-print(logits)
+print(loss.item())
 
-# idx = torch.zeros((1, 1), dtype=torch.long)
-# print(decode(generate(idx, targetss=None,
-#       max_new_tokens=100)[0].tolist()))
+context = torch.zeros((1, 1), dtype=torch.long, device=DEVICE)
+print(decode(model.generate(context, max_new_tokens=BLOCK_SIZE)[0].tolist()))
