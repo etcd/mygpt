@@ -21,7 +21,7 @@ torch.manual_seed(1234)
 BLOCK_SIZE = 32  # max context length for predictions
 BATCH_SIZE = 4  # number of sequences to process in parallel
 EMBED_DIMS = 32  # embedding dimensions
-TRAINING_STEPS = 5000
+TRAINING_STEPS = 20000
 LEARNING_RATE = 1e-3
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -62,6 +62,7 @@ class LanguageModel(nn.Module):
             position_embeddings = self.position_embedding_table(
                 torch.arange(context_crop.shape[1], device=DEVICE))  # (T, E)
             x = token_embeddings + position_embeddings  # (B, T, E)
+            x = self.sa_head(x)
             logits = self.lm_head(x)  # (B, T, V)
             logits = logits[:, -1, :]  # get last time step; (B, V)
             probabilities = torch.nn.functional.softmax(
