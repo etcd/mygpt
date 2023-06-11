@@ -1,5 +1,6 @@
 
 import random
+import time
 import torch
 import torch.nn as nn
 
@@ -19,10 +20,10 @@ E = Embedding dimensions
 torch.manual_seed(1234)
 
 BLOCK_SIZE = 32  # max context length for predictions
-BATCH_SIZE = 4  # number of sequences to process in parallel
+BATCH_SIZE = 32  # number of sequences to process in parallel
 N_EMBED = 32  # embedding dimensions
 NUM_HEADS = 4  # number of heads in multi-head attention
-TRAINING_STEPS = 10000
+TRAINING_STEPS = 1000
 LEARNING_RATE = 1e-3
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -137,6 +138,10 @@ train_data, validate_data = split_list(DATA, [0.9, 0.1])
 model = DecoderTransformerModel(len(ALPHABET), N_EMBED)
 model = model.to(DEVICE)
 
+print("Parameter count", sum(p.nelement() for p in model.parameters()))
+
+start_time = time.time()
+
 optimizer = torch.optim.AdamW(model.parameters(), lr=LEARNING_RATE)
 for steps in range(TRAINING_STEPS):
     xs, ys = get_batch(train_data, BLOCK_SIZE, BATCH_SIZE)
@@ -145,7 +150,8 @@ for steps in range(TRAINING_STEPS):
     loss.backward()
     optimizer.step()
 
-print(loss.item())
+print("Training time", time.time() - start_time)
+print("Loss", loss.item())
 
 context = torch.zeros((1, 1), dtype=torch.long, device=DEVICE)
 print(decode(model.generate(context, max_new_tokens=100)[0].tolist()))
