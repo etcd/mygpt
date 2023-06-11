@@ -21,10 +21,11 @@ torch.manual_seed(1234)
 
 BLOCK_SIZE = 32  # max context length for predictions
 BATCH_SIZE = 32  # number of sequences to process in parallel
-N_EMBED = 32  # embedding dimensions
+N_EMBED = 64  # embedding dimensions
 NUM_HEADS = 4  # number of heads in multi-head attention
-TRAINING_STEPS = 1000
-LEARNING_RATE = 1e-3
+N_LAYERS = 4  # number of transformer blocks
+TRAINING_STEPS = 10000
+LEARNING_RATE = 3e-4
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
@@ -59,9 +60,7 @@ class DecoderTransformerModel(nn.Module):
         self.position_embedding_table = nn.Embedding(
             BLOCK_SIZE, n_embed)  # (T, E)
         self.blocks = nn.Sequential(
-            Block(NUM_HEADS, n_embed, BLOCK_SIZE),
-            Block(NUM_HEADS, n_embed, BLOCK_SIZE),
-            Block(NUM_HEADS, n_embed, BLOCK_SIZE),
+            *[Block(NUM_HEADS, n_embed, BLOCK_SIZE) for _ in range(N_LAYERS)]
         )
         self.ln_final = nn.LayerNorm(n_embed)
         self.lm_head = nn.Linear(n_embed, vocab_size)
