@@ -24,7 +24,7 @@ BATCH_SIZE = 32  # number of sequences to process in parallel
 N_EMBED = 64  # embedding dimensions
 NUM_HEADS = 4  # number of heads in multi-head attention
 N_LAYERS = 3  # number of transformer blocks
-TRAINING_STEPS = 10000
+TRAINING_STEPS = 4000
 LEARNING_RATE = 1e-3
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -151,6 +151,10 @@ for steps in range(TRAINING_STEPS):
 
 print("Training time", time.time() - start_time)
 print("Loss", loss.item())
+
+validation_loss = model(
+    *get_batch(validate_data, BLOCK_SIZE, BATCH_SIZE*100))[1]
+print("Validation loss", validation_loss.item())
 
 context = torch.zeros((1, 1), dtype=torch.long, device=DEVICE)
 print(decode(model.generate(context, max_new_tokens=300)[0].tolist()))
