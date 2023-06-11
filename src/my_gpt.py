@@ -48,9 +48,9 @@ class LanguageModel(nn.Module):
         if targets is None:
             loss = None
         else:
-            B, T, C = logits.shape
+            B, T, E = logits.shape
             loss = nn.functional.cross_entropy(
-                logits.view(B*T, C), targets.reshape(B*T))
+                logits.view(B*T, E), targets.reshape(B*T))
         return logits, loss
 
     def generate(self, context, max_new_tokens):

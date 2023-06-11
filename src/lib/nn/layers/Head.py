@@ -14,14 +14,14 @@ class Head(nn.Module):
             torch.ones(block_size, block_size)))
 
     def forward(self, x):
-        B, T, C = x.shape
-        keys = self.key(x)  # (B, T, C)
-        queries = self.query(x)  # (B, T, C)
+        B, T, E = x.shape
+        keys = self.key(x)  # (B, T, E)
+        queries = self.query(x)  # (B, T, E)
 
         # compute attention scores / affinities
 
-        # (B, T, C) @ (B, C, T) -> (B, T, T)
-        weights = queries @ keys.transpose(-2, -1) * C**-0.5
+        # (B, T, E) @ (B, E, T) -> (B, T, T)
+        weights = queries @ keys.transpose(-2, -1) * E**-0.5
         weights = weights.masked_fill(
             self.tril[:T, :T] == 0, float('-inf'))  # (B, T, T)
         weights = torch.nn.functional.softmax(weights, dim=-1)  # (B, T, T)
