@@ -36,11 +36,11 @@ class LanguageModel(nn.Module):
         self.sa_head = Head(embed_dims, BLOCK_SIZE, embed_dims)
         self.lm_head = nn.Linear(embed_dims, vocab_size)
 
-    def forward(self, context, targets=None):
-        # context is (B, T)
-        token_embeddings = self.token_embedding_table(context)  # (B, T, E)
+    def forward(self, xs, targets=None):
+        # xs is (B, T)
+        token_embeddings = self.token_embedding_table(xs)  # (B, T, E)
         position_embeddings = self.position_embedding_table(
-            torch.arange(context.shape[1], device=DEVICE))  # (T, E)
+            torch.arange(xs.shape[1], device=DEVICE))  # (T, E)
         x = token_embeddings + position_embeddings  # (B, T, E)
         x = self.sa_head(x)  # apply one head of self attention (B, T, E)
         logits = self.lm_head(x)  # (B, T, V)
@@ -53,24 +53,22 @@ class LanguageModel(nn.Module):
                 logits.view(B*T, E), targets.reshape(B*T))
         return logits, loss
 
-    def generate(self, context, max_new_tokens):
-        # context is (B, T)
+    def generate(self, xs, max_new_tokens):
+        # xs is (B, T)
         for _ in range(max_new_tokens):
-            context_crop = context[:, -BLOCK_SIZE:]  # (B, T)
-            token_embeddings = self.token_embedding_table(
-                context_crop)  # (B, T, E)
+            xs_crop = xs[:, -BLOCK_SIZE:]  # (B, T)
+            token_embeddings = self.token_embedding_table(xs_crop)  # (B, T, E)
             position_embeddings = self.position_embedding_table(
-                torch.arange(context_crop.shape[1], device=DEVICE))  # (T, E)
+                torch.arange(xs_crop.shape[1], device=DEVICE))  # (T, E)
             x = token_embeddings + position_embeddings  # (B, T, E)
             x = self.sa_head(x)
             logits = self.lm_head(x)  # (B, T, V)
             logits = logits[:, -1, :]  # get last time step; (B, V)
             probabilities = torch.nn.functional.softmax(
                 logits, dim=-1)  # (B, V)
-            context_next = torch.multinomial(
-                probabilities, num_samples=1)  # (B, 1)
-            context = torch.cat([context, context_next], dim=1)  # (B, T+1)
-        return context
+            xs_next = torch.multinomial(probabilities, num_samples=1)  # (B, 1)
+            xs = torch.cat([xs, xs_next], dim=1)  # (B, T+1)
+        return xs
 
 
 def make_sample(data, index, block_size):
@@ -110,15 +108,10 @@ ALPHABET = sorted(list(set(TEXT)))
 DATA = torch.tensor(encode(TEXT), dtype=torch.long)
 train_data, validate_data = split_list(DATA, [0.9, 0.1])
 
-
-xs, ys = get_batch(train_data, BLOCK_SIZE, BATCH_SIZE)
-
 model = LanguageModel(len(ALPHABET), EMBED_DIMS)
 model = model.to(DEVICE)
 
-
 optimizer = torch.optim.AdamW(model.parameters(), lr=LEARNING_RATE)
-
 for steps in range(TRAINING_STEPS):
     xs, ys = get_batch(train_data, BLOCK_SIZE, BATCH_SIZE)
     logits, loss = model(xs, ys)
