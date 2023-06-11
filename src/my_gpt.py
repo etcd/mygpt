@@ -50,7 +50,7 @@ class Block(nn.Module):
         return x
 
 
-class LanguageModel(nn.Module):
+class DecoderTransformerModel(nn.Module):
     def __init__(self, vocab_size, n_embed):
         super().__init__()
         self.token_embedding_table = nn.Embedding(
@@ -138,7 +138,7 @@ ALPHABET = sorted(list(set(TEXT)))
 DATA = torch.tensor(encode(TEXT), dtype=torch.long)
 train_data, validate_data = split_list(DATA, [0.9, 0.1])
 
-model = LanguageModel(len(ALPHABET), N_EMBED)
+model = DecoderTransformerModel(len(ALPHABET), N_EMBED)
 model = model.to(DEVICE)
 
 optimizer = torch.optim.AdamW(model.parameters(), lr=LEARNING_RATE)
