@@ -65,8 +65,7 @@ class LanguageModel(nn.Module):
         position_embeddings = self.position_embedding_table(
             torch.arange(xs.shape[1], device=DEVICE))  # (T, E)
         x = token_embeddings + position_embeddings  # (B, T, E)
-        # apply one head of self attention (B, T, Head Size)
-        x = self.blocks(x)
+        x = self.blocks(x)  # (B, T, E)
         logits = self.lm_head(x)  # (B, T, V)
 
         if targets is None:
@@ -85,7 +84,7 @@ class LanguageModel(nn.Module):
             position_embeddings = self.position_embedding_table(
                 torch.arange(xs_crop.shape[1], device=DEVICE))  # (T, E)
             x = token_embeddings + position_embeddings  # (B, T, E)
-            x = self.blocks(x)  # (B, T, Head Size)
+            x = self.blocks(x)  # (B, T, E)
             logits = self.lm_head(x)  # (B, T, V)
 
             logits = logits[:, -1, :]  # get last time step; (B, V)
