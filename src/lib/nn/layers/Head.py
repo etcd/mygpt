@@ -21,14 +21,16 @@ class Head(nn.Module):
         # compute attention scores / affinities
 
         # (B, T, E) @ (B, E, T) -> (B, T, T)
-        weights = queries @ keys.transpose(-2, -1) * E**-0.5
-        weights = weights.masked_fill(
+        # for each sample in a batch, we compute the affinity matrix
+        affinities = queries @ keys.transpose(-2, -1) * E**-0.5
+        affinities = affinities.masked_fill(
             self.tril[:T, :T] == 0, float('-inf'))  # (B, T, T)
-        weights = torch.nn.functional.softmax(weights, dim=-1)  # (B, T, T)
+        affinities = torch.nn.functional.softmax(
+            affinities, dim=-1)  # (B, T, T)
 
         # perform weighted average of values
         value = self.value(x)  # (B, T, C)
-        out = weights @ value  # (B, T, T) @ (B, T, C) -> (B, T, C)
+        out = affinities @ value  # (B, T, T) @ (B, T, C) -> (B, T, C)
         return out
 
 
