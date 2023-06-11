@@ -20,7 +20,7 @@ torch.manual_seed(1234)
 
 BLOCK_SIZE = 32  # max context length for predictions
 BATCH_SIZE = 4  # number of sequences to process in parallel
-EMBED_DIMS = 32  # embedding dimensions
+N_EMBED = 32  # embedding dimensions
 NUM_HEADS = 4  # number of heads in multi-head attention
 TRAINING_STEPS = 10000
 LEARNING_RATE = 1e-3
@@ -30,34 +30,40 @@ DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 class Block(nn.Module):
     '''Transformer block: communication followed by computation.'''
 
-    def __init__(self, n_heads, embed_dims, block_size):
+    def __init__(self, n_heads, n_embed, block_size):
         super().__init__()
-        # communication
+        # communication via multi-headed self-attention
         self.self_attention = MultiHeadAttention(
-            n_heads, embed_dims, block_size)
-        # computation
-        self.ffwd = FeedForward(embed_dims)
+            n_heads, n_embed, block_size)
+        # computation via feed-forward network
+        self.ffwd = FeedForward(n_embed)
+        # layer normalization
+        self.ln1 = nn.LayerNorm(n_embed)
+        self.ln2 = nn.LayerNorm(n_embed)
 
     def forward(self, x):
         # residual connections achieved with `x +`
-        x = x + self.self_attention(x)  # (B, T, E)
-        x = x + self.ffwd(x)  # (B, T, E)
+        # communication
+        x = x + self.self_attention(self.ln1(x))  # (B, T, E)
+        # computation
+        x = x + self.ffwd(self.ln2(x))  # (B, T, E)
         return x
 
 
 class LanguageModel(nn.Module):
-    def __init__(self, vocab_size, embed_dims):
+    def __init__(self, vocab_size, n_embed):
         super().__init__()
         self.token_embedding_table = nn.Embedding(
-            vocab_size, embed_dims)  # (V, E)
+            vocab_size, n_embed)  # (V, E)
         self.position_embedding_table = nn.Embedding(
-            BLOCK_SIZE, embed_dims)  # (T, E)
+            BLOCK_SIZE, n_embed)  # (T, E)
         self.blocks = nn.Sequential(
-            Block(NUM_HEADS, embed_dims, BLOCK_SIZE),
-            Block(NUM_HEADS, embed_dims, BLOCK_SIZE),
-            Block(NUM_HEADS, embed_dims, BLOCK_SIZE)
+            Block(NUM_HEADS, n_embed, BLOCK_SIZE),
+            Block(NUM_HEADS, n_embed, BLOCK_SIZE),
+            Block(NUM_HEADS, n_embed, BLOCK_SIZE),
+            nn.LayerNorm(n_embed)
         )
-        self.lm_head = nn.Linear(embed_dims, vocab_size)
+        self.lm_head = nn.Linear(n_embed, vocab_size)
 
     def forward(self, xs, targets=None):
         # xs is (B, T)
@@ -132,7 +138,7 @@ ALPHABET = sorted(list(set(TEXT)))
 DATA = torch.tensor(encode(TEXT), dtype=torch.long)
 train_data, validate_data = split_list(DATA, [0.9, 0.1])
 
-model = LanguageModel(len(ALPHABET), EMBED_DIMS)
+model = LanguageModel(len(ALPHABET), N_EMBED)
 model = model.to(DEVICE)
 
 optimizer = torch.optim.AdamW(model.parameters(), lr=LEARNING_RATE)
