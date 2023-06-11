@@ -5,7 +5,7 @@ import torch.nn as nn
 class Head(nn.Module):
     '''A self-attention head.'''
 
-    def __init__(self, n_embed, block_size, head_size):
+    def __init__(self, n_embed, block_size, head_size, n_dropout=0.1):
         super().__init__()
         # `Key` layer: what do I contain?
         # (B, T, Embeddings) -> (B, T, Head Size)
@@ -16,6 +16,8 @@ class Head(nn.Module):
         # `Value` layer: if affinities multiply by me, what do I output?
         # (B, T, Embeddings) -> (B, T, Head Size)
         self.value = nn.Linear(n_embed, head_size, bias=False)
+        # dropout
+        self.dropout = nn.Dropout(n_dropout)
         # constant, not a learnable parameter
         self.register_buffer('tril', torch.tril(
             torch.ones(block_size, block_size)))
@@ -34,6 +36,7 @@ class Head(nn.Module):
             self.tril[:T, :T] == 0, float('-inf'))  # (B, T, T)
         affinities = torch.nn.functional.softmax(
             affinities, dim=-1)  # (B, T, T)
+        affinities = self.dropout(affinities)  # (B, T, T)
 
         # perform weighted average of values
         values = self.value(x)  # (B, T, Head Size)
@@ -45,16 +48,18 @@ class Head(nn.Module):
 class MultiHeadAttention(nn.Module):
     '''Multiple heads of self-attention.'''
 
-    def __init__(self, n_heads, n_embed, block_size):
+    def __init__(self, n_heads, n_embed, block_size, n_dropout=0.1):
         super().__init__()
         head_size = n_embed // n_heads
         self.heads = nn.ModuleList([Head(n_embed, block_size, head_size)
                                     for _ in range(n_heads)])
         # projection layer for residual connection
         self.proj = nn.Linear(n_embed, n_embed)
+        # dropout
+        self.dropout = nn.Dropout(n_dropout)
 
     def forward(self, x):
         # x is (B, T, E)
         out = torch.cat([h(x) for h in self.heads], dim=-1)  # (B, T, E)
-        out = self.proj(out)  # (B, T, E)
+        out = self.dropout(self.proj(out))  # (B, T, E)
         return out

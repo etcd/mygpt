@@ -61,8 +61,8 @@ class DecoderTransformerModel(nn.Module):
             Block(NUM_HEADS, n_embed, BLOCK_SIZE),
             Block(NUM_HEADS, n_embed, BLOCK_SIZE),
             Block(NUM_HEADS, n_embed, BLOCK_SIZE),
-            nn.LayerNorm(n_embed)
         )
+        self.ln_final = nn.LayerNorm(n_embed)
         self.lm_head = nn.Linear(n_embed, vocab_size)
 
     def forward(self, xs, targets=None):
@@ -72,6 +72,7 @@ class DecoderTransformerModel(nn.Module):
             torch.arange(xs.shape[1], device=DEVICE))  # (T, E)
         x = token_embeddings + position_embeddings  # (B, T, E)
         x = self.blocks(x)  # (B, T, E)
+        x = self.ln_final(x)  # (B, T, E)
         logits = self.lm_head(x)  # (B, T, V)
 
         if targets is None:
@@ -86,12 +87,7 @@ class DecoderTransformerModel(nn.Module):
         # xs is (B, T)
         for _ in range(max_new_tokens):
             xs_crop = xs[:, -BLOCK_SIZE:]  # (B, T)
-            token_embeddings = self.token_embedding_table(xs_crop)  # (B, T, E)
-            position_embeddings = self.position_embedding_table(
-                torch.arange(xs_crop.shape[1], device=DEVICE))  # (T, E)
-            x = token_embeddings + position_embeddings  # (B, T, E)
-            x = self.blocks(x)  # (B, T, E)
-            logits = self.lm_head(x)  # (B, T, V)
+            logits, _ = self(xs_crop)  # (B, T, V)
 
             logits = logits[:, -1, :]  # get last time step; (B, V)
             probabilities = torch.nn.functional.softmax(
