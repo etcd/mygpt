@@ -53,9 +53,7 @@ class MultiHeadAttention(nn.Module):
         self.proj = nn.Linear(n_embed, n_embed)
 
     def forward(self, x):
-        # (B, T, E) -> (B, T, E)
-        out = torch.cat([h(x) for h in self.heads], dim=-1)
-        # (B, T, E) -> (B, T, E)
-        out = self.proj(out)
-
+        # x is (B, T, E)
+        out = torch.cat([h(x) for h in self.heads], dim=-1)  # (B, T, E)
+        out = self.proj(out)  # (B, T, E)
         return out
