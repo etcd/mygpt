@@ -21,9 +21,28 @@ torch.manual_seed(1234)
 BLOCK_SIZE = 32  # max context length for predictions
 BATCH_SIZE = 4  # number of sequences to process in parallel
 EMBED_DIMS = 32  # embedding dimensions
-TRAINING_STEPS = 5000
+NUM_HEADS = 4  # number of heads in multi-head attention
+TRAINING_STEPS = 1000
 LEARNING_RATE = 1e-3
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+
+class Block(nn.Module):
+    '''Transformer block: communication followed by computation.'''
+
+    def __init__(self, n_heads, embed_dims, block_size):
+        super().__init__()
+        # communication
+        self.self_attention = MultiHeadAttention(
+            n_heads, embed_dims, block_size)
+        # computation
+        self.ffwd = FeedForward(embed_dims)
+
+    def forward(self, x):
+        # residual connections achieved with `x +`
+        x = x + self.self_attention(x)
+        x = x + self.ffwd(x)
+        return x
 
 
 class LanguageModel(nn.Module):
@@ -33,7 +52,11 @@ class LanguageModel(nn.Module):
             vocab_size, embed_dims)  # (V, E)
         self.position_embedding_table = nn.Embedding(
             BLOCK_SIZE, embed_dims)  # (T, E)
-        self.sa_head = Head(embed_dims, BLOCK_SIZE, embed_dims)
+        self.blocks = nn.Sequential(
+            Block(NUM_HEADS, embed_dims, BLOCK_SIZE),
+            Block(NUM_HEADS, embed_dims, BLOCK_SIZE),
+            Block(NUM_HEADS, embed_dims, BLOCK_SIZE)
+        )
         self.lm_head = nn.Linear(embed_dims, vocab_size)
 
     def forward(self, xs, targets=None):
@@ -43,7 +66,7 @@ class LanguageModel(nn.Module):
             torch.arange(xs.shape[1], device=DEVICE))  # (T, E)
         x = token_embeddings + position_embeddings  # (B, T, E)
         # apply one head of self attention (B, T, Head Size)
-        x = self.sa_head(x)
+        x = self.blocks(x)
         logits = self.lm_head(x)  # (B, T, V)
 
         if targets is None:
@@ -62,8 +85,9 @@ class LanguageModel(nn.Module):
             position_embeddings = self.position_embedding_table(
                 torch.arange(xs_crop.shape[1], device=DEVICE))  # (T, E)
             x = token_embeddings + position_embeddings  # (B, T, E)
-            x = self.sa_head(x)  # (B, T, Head Size)
+            x = self.blocks(x)  # (B, T, Head Size)
             logits = self.lm_head(x)  # (B, T, V)
+
             logits = logits[:, -1, :]  # get last time step; (B, V)
             probabilities = torch.nn.functional.softmax(
                 logits, dim=-1)  # (B, V)
