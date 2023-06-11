@@ -22,7 +22,7 @@ BLOCK_SIZE = 32  # max context length for predictions
 BATCH_SIZE = 4  # number of sequences to process in parallel
 EMBED_DIMS = 32  # embedding dimensions
 NUM_HEADS = 4  # number of heads in multi-head attention
-TRAINING_STEPS = 1000
+TRAINING_STEPS = 10000
 LEARNING_RATE = 1e-3
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -40,8 +40,8 @@ class Block(nn.Module):
 
     def forward(self, x):
         # residual connections achieved with `x +`
-        x = x + self.self_attention(x)
-        x = x + self.ffwd(x)
+        x = x + self.self_attention(x)  # (B, T, E)
+        x = x + self.ffwd(x)  # (B, T, E)
         return x
 
 
