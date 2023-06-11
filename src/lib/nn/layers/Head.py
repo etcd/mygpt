@@ -7,16 +7,23 @@ class Head(nn.Module):
 
     def __init__(self, n_embed, block_size, head_size):
         super().__init__()
+        # `Key` layer: what do I contain?
+        # (B, T, Embeddings) -> (B, T, Head Size)
         self.key = nn.Linear(n_embed, head_size, bias=False)
+        # `Query` layer: what am I looking for?
+        # (B, T, Embeddings) -> (B, T, Head Size)
         self.query = nn.Linear(n_embed, head_size, bias=False)
+        # `Value` layer: if affinities multiply by me, what do I output?
+        # (B, T, Embeddings) -> (B, T, Head Size)
         self.value = nn.Linear(n_embed, head_size, bias=False)
+        # constant, not a learnable parameter
         self.register_buffer('tril', torch.tril(
             torch.ones(block_size, block_size)))
 
     def forward(self, x):
         B, T, E = x.shape
-        keys = self.key(x)  # (B, T, E)
-        queries = self.query(x)  # (B, T, E)
+        keys = self.key(x)  # (B, T, Head Size)
+        queries = self.query(x)  # (B, T, Head Size)
 
         # compute attention scores / affinities
 
@@ -29,8 +36,9 @@ class Head(nn.Module):
             affinities, dim=-1)  # (B, T, T)
 
         # perform weighted average of values
-        value = self.value(x)  # (B, T, C)
-        out = affinities @ value  # (B, T, T) @ (B, T, C) -> (B, T, C)
+        values = self.value(x)  # (B, T, Head Size)
+        # (B, T, T) @ (B, T, Head Size) -> (B, T, Head Size)
+        out = affinities @ values
         return out
 
 
