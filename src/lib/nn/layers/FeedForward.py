@@ -7,6 +7,7 @@ class FeedForward(nn.Module):
         self.layers = nn.Sequential(
             nn.Linear(n_embed, n_embed*4),
             nn.ReLU(),
+            # projection for residual connection
             nn.Linear(4*n_embed, n_embed),
         )
 

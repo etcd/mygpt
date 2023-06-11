@@ -50,6 +50,7 @@ class MultiHeadAttention(nn.Module):
         head_size = n_embed // n_heads
         self.heads = nn.ModuleList([Head(n_embed, block_size, head_size)
                                     for _ in range(n_heads)])
+        # projection layer for residual connection
         self.proj = nn.Linear(n_embed, n_embed)
 
     def forward(self, x):
