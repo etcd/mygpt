@@ -21,11 +21,11 @@ torch.manual_seed(1234)
 
 BLOCK_SIZE = 32  # max context length for predictions
 BATCH_SIZE = 32  # number of sequences to process in parallel
-N_EMBED = 64  # embedding dimensions
+N_EMBED = 96  # embedding dimensions
 NUM_HEADS = 4  # number of heads in multi-head attention
 N_LAYERS = 3  # number of transformer blocks
-TRAINING_STEPS = 4000
-LEARNING_RATE = 1e-3
+TRAINING_STEPS = 8000
+LEARNING_RATE = 3e-4
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
@@ -132,7 +132,7 @@ ALPHABET = sorted(list(set(TEXT)))
 (encode, decode) = make_tokenizers(ALPHABET)
 
 DATA = torch.tensor(encode(TEXT), dtype=torch.long)
-train_data, validate_data = split_list(DATA, [0.9, 0.1])
+train_data, validate_data = split_list(DATA, [0.85, 0.15])
 
 model = DecoderTransformerModel(len(ALPHABET), N_EMBED)
 model = model.to(DEVICE)
@@ -153,7 +153,7 @@ print("Training time", time.time() - start_time)
 print("Loss", loss.item())
 
 validation_loss = model(
-    *get_batch(validate_data, BLOCK_SIZE, BATCH_SIZE*100))[1]
+    *get_batch(validate_data, BLOCK_SIZE, BATCH_SIZE*300))[1]
 print("Validation loss", validation_loss.item())
 
 context = torch.zeros((1, 1), dtype=torch.long, device=DEVICE)
