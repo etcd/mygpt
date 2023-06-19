@@ -40,15 +40,15 @@ class Block(nn.Module):
         # computation via feed-forward network
         self.ffwd = FeedForward(n_embed)
         # layer normalization
-        self.ln1 = nn.LayerNorm(n_embed)
-        self.ln2 = nn.LayerNorm(n_embed)
+        self.layernorm1 = nn.LayerNorm(n_embed)
+        self.layernorm2 = nn.LayerNorm(n_embed)
 
     def forward(self, x):
         # residual connections achieved with `x +`
         # communication
-        x = x + self.self_attention(self.ln1(x))  # (B, T, E)
+        x = x + self.self_attention(self.layernorm1(x))  # (B, T, E)
         # computation
-        x = x + self.ffwd(self.ln2(x))  # (B, T, E)
+        x = x + self.ffwd(self.layernorm2(x))  # (B, T, E)
         return x
 
 
@@ -62,8 +62,8 @@ class DecoderTransformerModel(nn.Module):
         self.blocks = nn.Sequential(
             *[Block(NUM_HEADS, n_embed, BLOCK_SIZE) for _ in range(N_LAYERS)]
         )
-        self.ln_final = nn.LayerNorm(n_embed)
-        self.lm_head = nn.Linear(n_embed, vocab_size)
+        self.layernorm_final = nn.LayerNorm(n_embed)
+        self.model_out = nn.Linear(n_embed, vocab_size)
 
     def forward(self, xs, targets=None):
         # xs is (B, T)
@@ -72,8 +72,8 @@ class DecoderTransformerModel(nn.Module):
             torch.arange(xs.shape[1], device=DEVICE))  # (T, E)
         x = token_embeddings + position_embeddings  # (B, T, E)
         x = self.blocks(x)  # (B, T, E)
-        x = self.ln_final(x)  # (B, T, E)
-        logits = self.lm_head(x)  # (B, T, V)
+        x = self.layernorm_final(x)  # (B, T, E)
+        logits = self.model_out(x)  # (B, T, V)
 
         if targets is None:
             loss = None
